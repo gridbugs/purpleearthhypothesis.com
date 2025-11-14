@@ -199,6 +199,7 @@ Maecenas eu consectetur augue, ullamcorper laoreet ligula. Aliquam sit amet turp
   position: fixed;
   left: 0;
   bottom: 0;
+  margin-bottom: 30px;
 }
 
 #ibis {
@@ -209,19 +210,31 @@ Maecenas eu consectetur augue, ullamcorper laoreet ligula. Aliquam sit amet turp
 
 .spin {
   transition-duration: 0s;
-  transition-timing-function: linear;
   position: absolute;
   z-index: 10;
-  /* Indenting by a few pixels gives the feeling of the glasses snapping into place. */
-  bottom: 2px;
-  left: 2px;
+  bottom: 0;
+  left: 0;
+  margin-bottom: 30px;
 }
 
 .spin:target-current {
-  rotate: 0.2 0 1 -360deg;
-  transition-duration: 0.5s;
-  transition-delay: 1s;
+  transform: rotate(-360deg);
+  transition:
+    transform 0.5s linear 2s;
+  filter: brightness(100%);
+  animation: flash-bright 0.25s;
 }
+
+.spin:target-current .glasses {
+  margin-bottom: 0;
+}
+
+@keyframes flash-bright {
+  0%   { filter: brightness(1); }
+  10%  { filter: brightness(4); }
+  100% { filter: brightness(1); }
+}
+
 </style>
 
     <div id="lowsky"></div>
