@@ -1,41 +1,47 @@
 <!doctype html>
 <html>
   <head>
+    <title>Purple Earth Hypothesis</title>
 <style>
 
-* {
+:root {
+  color-scheme: dark;
+  font-family: Monospace;
+  background-image: linear-gradient(to bottom, #200020, #400040);
   padding: 0;
   margin: 0;
-  font-family: Monospace;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  padding-bottom: 1em;
-}
-
-p {
-  padding-bottom: 1em;
 }
 
 body {
   scroll-target-group: auto;
+  padding: 0;
+  margin: 0;
 }
 
 #content-vertical {
   position: relative;
+  padding: 0;
+  margin: 0;
 }
 
 #content-horizontal {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  padding: 24px;
+  padding-top: 12px;
   max-width: 750px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 48px;
-  padding-right: 48px;
+  background-color: #100010;
+  z-index: 5;
 }
 
 footer {
+  border-top: 1px solid white;
   text-align: center;
-  border-top: 2px solid black;
+  padding-top: 24px;
+  margin-top: 24px;
 }
 
 .ibis-size {
@@ -46,12 +52,12 @@ footer {
 
 #glasses-left {
   background-image: url("glasses-left.png");
-  z-index: 1;
+  z-index: 11;
 }
 
 #glasses-right {
   background-image: url("glasses-right.png");
-  z-index: 3;
+  z-index: 13;
 }
 
 .glasses {
@@ -63,13 +69,14 @@ footer {
 #ibis {
   position: relative;
   background-image: url("ibis.png");
-  z-index: 2;
+  z-index: 12;
 }
 
 .spin {
   transition-duration: 0s;
   transition-timing-function: linear;
   position: absolute;
+  z-index: 10;
   /* Indenting by a few pixels gives the feeling of the glasses snapping into place. */
   bottom: 2px;
   left: 2px;
@@ -81,6 +88,35 @@ footer {
   transition-delay: 0.5s;
 }
 
+#lowsky {
+  z-index: 0;
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  height: 500px;
+  background-image: linear-gradient(to bottom, #00000000, #FF880080);
+}
+
+#horizon {
+  z-index: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background-image: linear-gradient(to bottom, #00000000, #FF800080);
+}
+
+#ground {
+  z-index: 1;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background-image: linear-gradient(to bottom, #000000, #001010);
+}
 
 </style>
   </head>
@@ -144,7 +180,9 @@ Maecenas eu consectetur augue, ullamcorper laoreet ligula. Aliquam sit amet turp
 </p>
 
 
-    <footer>footer</footer>
+    <footer>
+      footer placeholder
+    </footer>
 
     </div>
 
@@ -158,8 +196,10 @@ Maecenas eu consectetur augue, ullamcorper laoreet ligula. Aliquam sit amet turp
     <div id="normal-scroll-target"></div>
     <div id="ibis-scroll-target"></div>
 
+    <div id="lowsky"></div>
+    <div id="horizon"></div>
+    <div id="ground"></div>
+
     </div>
-
-
   </body>
 </html>
