@@ -73,6 +73,17 @@ function load_color_map() {
   });
 }
 
+function mountainsBaseBrighter() {
+  return document.getElementById("mountains-base-brighter");
+}
+
+function mountainsBaseOn() {
+  mountainsBaseBrighter().style.opacity = "1";
+}
+function mountainsBaseOff() {
+  mountainsBaseBrighter().style.opacity = "0";
+}
+
 class Keyboard {
   constructor(color_map) {
     this.color_map = color_map;
@@ -83,6 +94,8 @@ class Keyboard {
       });
     });
     this.pressed_key_index = -1;
+    this.grid_position = 0;
+    this.grid_element = document.getElementById("grid");
   }
 
   getBoundingRect() {
@@ -128,6 +141,7 @@ class Keyboard {
   }
 
   pressKey(i) {
+    const already_pressed = this.pressed_key_index !== -1;
     this.clearPressedKey();
     if (i === -1) {
       return;
@@ -140,6 +154,20 @@ class Keyboard {
       element.style.transform = `translate(0, ${bounding_rect.height * 0.04}px)`;
       element.style.transitionDuration = "0s";
     }
+    if (!already_pressed) {
+      mountainsBaseOn();
+      this.moveGridLoop();
+    }
+  }
+
+  moveGridLoop() {
+    this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
+    this.grid_position += 0.5;
+    requestIdleCallback(_ => {
+      if (this.pressed_key_index !== -1) {
+        this.moveGridLoop();
+      }
+    });
   }
 
   registerAll() {
@@ -163,6 +191,7 @@ class Keyboard {
     });
     this.registerGen("mouseup", _ => {
       this.clearPressedKey();
+      mountainsBaseOff();
     });
   }
 }
