@@ -1,6 +1,83 @@
 const WIDTH_PX = 689;
 const HEIGHT_PX = 200;
 const SEMITONE_RATIO = Math.pow(2, 1/12);
+const BOTTOM_NOTE_FREQ_HZ = 32.70; // C1
+
+function note_index_to_freq_hz(index) {
+  return Math.pow(SEMITONE_RATIO, index) * BOTTOM_NOTE_FREQ_HZ;
+}
+
+class SuperSaw {
+  constructor(ctx, n, detune) {
+    this.ctx = ctx;
+    this.detune = detune;
+    this.oscillators = [];
+    this.gain = ctx.createGain();
+    for (let i = 0; i < n; i++) {
+      const osc = ctx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(0, this.ctx.currentTime);
+      this.oscillators.push(osc);
+      osc.connect(this.gain);
+    }
+  }
+
+  setFrequency(freq_hz) {
+    const detune_hz = this.detune * freq_hz;
+    const start_hz = freq_hz - (detune_hz / 2);
+    const step_hz = detune_hz / this.oscillators.length;
+    let running_freq_hz = start_hz;
+    for (const osc of this.oscillators) {
+      osc.frequency.setValueAtTime(running_freq_hz, this.ctx.currentTime);
+      running_freq_hz += step_hz;
+    }
+  }
+
+  connect(dest) {
+    this.gain.connect(dest);
+  }
+
+  start() {
+    for (const osc of this.oscillators) {
+      osc.start();
+    }
+  }
+}
+
+class Synth {
+  constructor() {
+    this.ctx = new AudioContext();
+    this.super_saw1 = new SuperSaw(this.ctx, 2, 0.01);
+    this.super_saw1.gain.gain.setValueAtTime(0.125, this.ctx.currentTime);
+    this.super_saw1.start();
+    this.super_saw2 = new SuperSaw(this.ctx, 2, 0.01);
+    this.super_saw2.gain.gain.setValueAtTime(0.125, this.ctx.currentTime);
+    this.super_saw2.start();
+    this.lpf = this.ctx.createBiquadFilter();
+    this.lpf.type = "lowpass";
+    this.lpf.frequency.setValueAtTime(0, this.ctx.currentTime);
+    this.lpf.Q.setValueAtTime(5, this.ctx.currentTime);
+    this.amp = this.ctx.createGain();
+    this.super_saw1.connect(this.lpf);
+    this.super_saw2.connect(this.lpf);
+    this.lpf.connect(this.amp);
+    this.amp.connect(this.ctx.destination);
+  }
+
+  playNote(index) {
+    this.amp.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.lpf.frequency.cancelScheduledValues(this.ctx.currentTime);
+    this.amp.gain.exponentialRampToValueAtTime(1, this.ctx.currentTime + 0.1);
+    this.lpf.frequency.exponentialRampToValueAtTime(20000, this.ctx.currentTime + 0.1 );
+    this.super_saw1.setFrequency(note_index_to_freq_hz(index));
+    this.super_saw2.setFrequency(note_index_to_freq_hz(index) * 2);
+  }
+
+  release() {
+    this.amp.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 10);
+    this.lpf.frequency.exponentialRampToValueAtTime(1, this.ctx.currentTime + 10);
+  }
+}
 
 const KEY_IDS = [
   [ "key-0" ],
@@ -79,10 +156,14 @@ function mountainsBaseBrighter() {
 }
 
 function mountainsBaseOn() {
-  mountainsBaseBrighter().style.opacity = "1";
+  const element = mountainsBaseBrighter();
+  element.style.transitionDuration = "0.1s";
+  element.style.opacity = "1";
 }
 function mountainsBaseOff() {
-  mountainsBaseBrighter().style.opacity = "0";
+  const element = mountainsBaseBrighter();
+  element.style.transitionDuration = "10s";
+  element.style.opacity = "0";
 }
 
 class Keyboard {
@@ -98,6 +179,15 @@ class Keyboard {
     this.grid_position = 0;
     this.grid_element = document.getElementById("grid");
     this.prev_frame = undefined;
+    this.grid_speed = 0;
+    this.synth = undefined;
+  }
+
+  getSynth() {
+    if (this.synth === undefined) {
+      this.synth = new Synth();
+    }
+    return this.synth;
   }
 
   getBoundingRect() {
@@ -158,24 +248,31 @@ class Keyboard {
     }
     if (!already_pressed) {
       mountainsBaseOn();
+    }
+    if (this.synth === undefined) {
+      // Only start this once.
       this.moveGridLoop();
     }
+    this.grid_speed = 1;
+    this.getSynth().playNote(this.pressed_key_index);
   }
 
   moveGridLoop() {
     requestIdleCallback(_ => {
-      if (this.pressed_key_index !== -1) {
-        const now = Date.now();
-        if (this.prev_frame !== undefined) {
-          const delta = now - this.prev_frame;
-          this.grid_position += delta * 0.05 * Math.pow(SEMITONE_RATIO, this.pressed_key_index);
+      if (this.pressed_key_index === -1) {
+        this.grid_speed *= 0.995;
+        if (this.grid_speed < 0.2) {
+          this.grid_speed = 0;
         }
-        this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
-        this.prev_frame = now;
-        this.moveGridLoop();
-      } else {
-        this.prev_frame = undefined;
       }
+      const now = Date.now();
+      if (this.prev_frame !== undefined) {
+        const delta = now - this.prev_frame;
+        this.grid_position += delta * 0.05 * Math.pow(SEMITONE_RATIO, this.pressed_key_index) * this.grid_speed;
+      }
+      this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
+      this.prev_frame = now;
+      this.moveGridLoop();
     });
   }
 
@@ -201,14 +298,19 @@ class Keyboard {
     document.addEventListener("mouseup", _ => {
       this.clearPressedKey();
       mountainsBaseOff();
+      if (this.synth !== undefined) {
+        this.synth.release();
+      }
     });
   }
 }
+
 
 async function main() {
   const color_map = await load_color_map();
   const keyboard = new Keyboard(color_map);
   keyboard.registerAll();
 }
+
 
 main();
