@@ -173,14 +173,64 @@ footer {
 
 #keyboard {
   position: absolute;
-  z-index: 5;
-  background-image: url("keyboard3.svg");
-  background-repeat: no-repeat;
   height: 200px;
   bottom: 0;
-  left: 20px;
-  right: 20px;
+  left: -10px;
+  right: 10px;
+  z-index: 5;
+  background-repeat: no-repeat;
   background-size: contain;
+  overflow: hidden;
+}
+
+#keyboard div {
+  position: absolute;
+  height: 200px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+#key-0 { background-image: url("key-0.png") }
+#key-1 { background-image: url("key-1.png") }
+#key-2-f { background-image: url("key-2-f.png") }
+#key-2-b { background-image: url("key-2-b.png") }
+#key-3 { background-image: url("key-3.png") }
+#key-4-f { background-image: url("key-4-f.png") }
+#key-4-b { background-image: url("key-4-b.png") }
+#key-5 { background-image: url("key-5.png") }
+#key-6 { background-image: url("key-6.png") }
+#key-7-f { background-image: url("key-7-f.png") }
+#key-7-b { background-image: url("key-7-b.png") }
+#key-8 { background-image: url("key-8.png") }
+#key-9-f { background-image: url("key-9-f.png") }
+#key-9-b { background-image: url("key-9-b.png") }
+#key-10 { background-image: url("key-10.png") }
+#key-11-f { background-image: url("key-11-f.png") }
+#key-11-b { background-image: url("key-11-b.png") }
+#key-12 { background-image: url("key-12.png") }
+#key-13 { background-image: url("key-13.png") }
+#key-14-f { background-image: url("key-14-f.png") }
+#key-14-b { background-image: url("key-14-b.png") }
+#key-15 { background-image: url("key-15.png") }
+#key-16-f { background-image: url("key-16-f.png") }
+#key-16-b { background-image: url("key-16-b.png") }
+#key-17 { background-image: url("key-17.png") }
+#key-18 { background-image: url("key-18.png") }
+#key-19-f { background-image: url("key-19-f.png") }
+#key-19-b { background-image: url("key-19-b.png") }
+#key-20 { background-image: url("key-20.png") }
+#key-21-f { background-image: url("key-21-f.png") }
+#key-21-b { background-image: url("key-21-b.png") }
+#key-22 { background-image: url("key-22.png") }
+#key-23-f { background-image: url("key-23-f.png") }
+#key-23-b { background-image: url("key-23-b.png") }
+#key-24 { background-image: url("key-24.png") }
+
+#keyboard .hover {
+  filter: brightness(75%);
 }
 
 .ibis-size {
@@ -254,6 +304,7 @@ footer {
   position: absolute;
   width: 30px;
   height: 30px;
+  text-shadow: 0 0 5px #fff;
 }
 #star-container div::before {
   content: ".";
