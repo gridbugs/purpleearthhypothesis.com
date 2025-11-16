@@ -88,10 +88,10 @@ footer {
   bottom: 200px;
   left: 0;
   right: 0;
-  height: 300px;
+  top: 0;
   background-image: url("mountains.svg");
-  background-repeat: repeat-x;
-  background-size: 1200px;
+  background-repeat: no-repeat;
+  background-size: contain;
   background-position: left bottom;
 }
 
@@ -176,10 +176,10 @@ footer {
   z-index: 5;
   background-image: url("keyboard3.svg");
   background-repeat: no-repeat;
-  height: 160px;
+  height: 200px;
   bottom: 0;
-  left: 10px;
-  right: 10px;
+  left: 20px;
+  right: 20px;
   background-size: contain;
 }
 
