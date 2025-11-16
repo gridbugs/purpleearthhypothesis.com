@@ -96,6 +96,7 @@ class Keyboard {
     this.pressed_key_index = -1;
     this.grid_position = 0;
     this.grid_element = document.getElementById("grid");
+    this.prev_frame = undefined;
   }
 
   getBoundingRect() {
@@ -161,11 +162,18 @@ class Keyboard {
   }
 
   moveGridLoop() {
-    this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
-    this.grid_position += 0.5;
     requestIdleCallback(_ => {
       if (this.pressed_key_index !== -1) {
+        const now = Date.now();
+        if (this.prev_frame !== undefined) {
+          const delta = now - this.prev_frame;
+          this.grid_position += delta * 0.05;
+        }
+        this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
+        this.prev_frame = now;
         this.moveGridLoop();
+      } else {
+        this.prev_frame = undefined;
       }
     });
   }
