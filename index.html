@@ -90,7 +90,29 @@ Maecenas eu consectetur augue, ullamcorper laoreet ligula. Aliquam sit amet turp
     <div id="palm1" class="palm"></div>
     <div id="palm2" class="palm"></div>
 
+
+
+
+
+    <div id="star-container"></div>
+
     <!-- end of "page" -->
     </div>
+
+<script>
+  const NUM_STARS = 300;
+  const MAX_STAR_TOP_PX = 4000;
+  function make_star() {
+    const star = document.createElement("div");
+    star.style.left = `${parseInt(Math.random() * 94 + 2)}%`;
+    star.style.top = `${parseInt(Math.random() * MAX_STAR_TOP_PX)}px`;
+    star.style.fontSize = `${parseInt(Math.random() * 20 + 8)}px`;
+    return star;
+  }
+  const star_container = document.getElementById("star-container");
+  for (let i = 0; i < NUM_STARS; i++) {
+    star_container.appendChild(make_star());
+  }
+</script>
   </body>
 </html>

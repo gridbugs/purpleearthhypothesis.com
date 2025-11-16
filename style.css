@@ -239,3 +239,22 @@ footer {
   10%  { filter: brightness(4); }
   100% { filter: brightness(1); }
 }
+
+#star-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+#star-container div {
+  z-index: 0;
+  color: white;
+  position: absolute;
+  width: 30px;
+  height: 30px;
+}
+#star-container div::before {
+  content: ".";
+}
