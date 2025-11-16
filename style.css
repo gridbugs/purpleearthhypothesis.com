@@ -140,11 +140,12 @@ footer {
   bottom: 0;
   width: 200%;
   left: -50%;
-  background-image: url("assets/grid.png");
+  background-image: url("assets/grid.svg");
   height: 250px;
   transform: perspective(30px) rotateX(8deg);
   background-size: 40px 15px;
   filter: blur(1px);
+  opacity: 0.5;
 }
 
 #grid-overlay1 {
