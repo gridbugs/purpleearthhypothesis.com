@@ -198,7 +198,7 @@ class Keyboard {
     this.registerGen("mousedown", (i) => {
       this.pressKey(i);
     });
-    this.registerGen("mouseup", _ => {
+    document.addEventListener("mouseup", _ => {
       this.clearPressedKey();
       mountainsBaseOff();
     });
