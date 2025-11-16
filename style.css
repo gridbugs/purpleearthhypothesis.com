@@ -18,7 +18,7 @@ body {
   margin: 0;
 }
 
-#content {
+#columns {
   position: relative;
   display: flex;
 }
@@ -38,15 +38,20 @@ body {
   order: 2;
   flex-grow: 0;
   position: relative;
-  padding: 0;
   margin: 0;
   padding: 24px;
-  padding-top: 12px;
+  padding-top: 0px;
   max-width: 750px;
   margin-left: auto;
   margin-right: auto;
   background-color: #100010F0;
   z-index: 5;
+}
+
+#content {
+  position: relative;
+  margin-top: 12px;
+  min-height: 100vh;
 }
 
 @media (max-width: 1130px) {
@@ -59,7 +64,6 @@ footer {
   border-top: 1px solid white;
   text-align: center;
   padding-top: 24px;
-  margin-top: 24px;
 }
 
 #lowsky {
