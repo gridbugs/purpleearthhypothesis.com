@@ -89,7 +89,7 @@ footer {
   left: 0;
   right: 0;
   top: 0;
-  background-image: url("mountains.svg");
+  background-image: url("assets/mountains.svg");
   background-repeat: no-repeat;
   background-size: contain;
   background-position: left bottom;
@@ -136,7 +136,7 @@ footer {
   bottom: 0;
   width: 200%;
   left: -50%;
-  background-image: url("grid.png");
+  background-image: url("assets/grid.png");
   height: 250px;
   transform: perspective(30px) rotateX(8deg);
   background-size: 40px 15px;
@@ -172,14 +172,14 @@ footer {
 
 #palm1 {
   right: 0px;
-  background-image: url("palm1.png");
+  background-image: url("assets/palm1.png");
   width: 530px;
   height: 856px;
 }
 
 #palm2 {
   left: 0px;
-  background-image: url("palm2.png");
+  background-image: url("assets/palm2.png");
   width: 441px;
   height: 767px;
   transform: scaleX(-1);
@@ -207,41 +207,41 @@ footer {
   background-size: contain;
 }
 
-#key-0 { background-image: url("key-0.png") }
-#key-1 { background-image: url("key-1.png") }
-#key-2-f { background-image: url("key-2-f.png") }
-#key-2-b { background-image: url("key-2-b.png") }
-#key-3 { background-image: url("key-3.png") }
-#key-4-f { background-image: url("key-4-f.png") }
-#key-4-b { background-image: url("key-4-b.png") }
-#key-5 { background-image: url("key-5.png") }
-#key-6 { background-image: url("key-6.png") }
-#key-7-f { background-image: url("key-7-f.png") }
-#key-7-b { background-image: url("key-7-b.png") }
-#key-8 { background-image: url("key-8.png") }
-#key-9-f { background-image: url("key-9-f.png") }
-#key-9-b { background-image: url("key-9-b.png") }
-#key-10 { background-image: url("key-10.png") }
-#key-11-f { background-image: url("key-11-f.png") }
-#key-11-b { background-image: url("key-11-b.png") }
-#key-12 { background-image: url("key-12.png") }
-#key-13 { background-image: url("key-13.png") }
-#key-14-f { background-image: url("key-14-f.png") }
-#key-14-b { background-image: url("key-14-b.png") }
-#key-15 { background-image: url("key-15.png") }
-#key-16-f { background-image: url("key-16-f.png") }
-#key-16-b { background-image: url("key-16-b.png") }
-#key-17 { background-image: url("key-17.png") }
-#key-18 { background-image: url("key-18.png") }
-#key-19-f { background-image: url("key-19-f.png") }
-#key-19-b { background-image: url("key-19-b.png") }
-#key-20 { background-image: url("key-20.png") }
-#key-21-f { background-image: url("key-21-f.png") }
-#key-21-b { background-image: url("key-21-b.png") }
-#key-22 { background-image: url("key-22.png") }
-#key-23-f { background-image: url("key-23-f.png") }
-#key-23-b { background-image: url("key-23-b.png") }
-#key-24 { background-image: url("key-24.png") }
+#key-0 { background-image: url("assets/key-0.png") }
+#key-1 { background-image: url("assets/key-1.png") }
+#key-2-f { background-image: url("assets/key-2-f.png") }
+#key-2-b { background-image: url("assets/key-2-b.png") }
+#key-3 { background-image: url("assets/key-3.png") }
+#key-4-f { background-image: url("assets/key-4-f.png") }
+#key-4-b { background-image: url("assets/key-4-b.png") }
+#key-5 { background-image: url("assets/key-5.png") }
+#key-6 { background-image: url("assets/key-6.png") }
+#key-7-f { background-image: url("assets/key-7-f.png") }
+#key-7-b { background-image: url("assets/key-7-b.png") }
+#key-8 { background-image: url("assets/key-8.png") }
+#key-9-f { background-image: url("assets/key-9-f.png") }
+#key-9-b { background-image: url("assets/key-9-b.png") }
+#key-10 { background-image: url("assets/key-10.png") }
+#key-11-f { background-image: url("assets/key-11-f.png") }
+#key-11-b { background-image: url("assets/key-11-b.png") }
+#key-12 { background-image: url("assets/key-12.png") }
+#key-13 { background-image: url("assets/key-13.png") }
+#key-14-f { background-image: url("assets/key-14-f.png") }
+#key-14-b { background-image: url("assets/key-14-b.png") }
+#key-15 { background-image: url("assets/key-15.png") }
+#key-16-f { background-image: url("assets/key-16-f.png") }
+#key-16-b { background-image: url("assets/key-16-b.png") }
+#key-17 { background-image: url("assets/key-17.png") }
+#key-18 { background-image: url("assets/key-18.png") }
+#key-19-f { background-image: url("assets/key-19-f.png") }
+#key-19-b { background-image: url("assets/key-19-b.png") }
+#key-20 { background-image: url("assets/key-20.png") }
+#key-21-f { background-image: url("assets/key-21-f.png") }
+#key-21-b { background-image: url("assets/key-21-b.png") }
+#key-22 { background-image: url("assets/key-22.png") }
+#key-23-f { background-image: url("assets/key-23-f.png") }
+#key-23-b { background-image: url("assets/key-23-b.png") }
+#key-24 { background-image: url("assets/key-24.png") }
 
 #keyboard .hover {
   filter: brightness(75%);
@@ -255,12 +255,12 @@ footer {
 }
 
 #glasses-left {
-  background-image: url("glasses-left.png");
+  background-image: url("assets/glasses-left.png");
   z-index: 11;
 }
 
 #glasses-right {
-  background-image: url("glasses-right.png");
+  background-image: url("assets/glasses-right.png");
   z-index: 13;
 }
 
@@ -273,7 +273,7 @@ footer {
 
 #ibis {
   position: relative;
-  background-image: url("ibis.png");
+  background-image: url("assets/ibis.png");
   z-index: 12;
 }
 

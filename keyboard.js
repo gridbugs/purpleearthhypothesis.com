@@ -65,7 +65,7 @@ function load_color_map() {
   canvas.height = HEIGHT_PX;
   const ctx = canvas.getContext("2d");
   const image = new Image(WIDTH_PX, HEIGHT_PX);
-  image.src = "keyboard-color-map.png";
+  image.src = "assets/keyboard-color-map.png";
   return new Promise(resolve => {
     image.addEventListener("load", _ => {
       ctx.drawImage(image, 0, 0);
