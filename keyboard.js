@@ -1,5 +1,6 @@
 const WIDTH_PX = 689;
 const HEIGHT_PX = 200;
+const SEMITONE_RATIO = Math.pow(2, 1/12);
 
 const KEY_IDS = [
   [ "key-0" ],
@@ -167,7 +168,7 @@ class Keyboard {
         const now = Date.now();
         if (this.prev_frame !== undefined) {
           const delta = now - this.prev_frame;
-          this.grid_position += delta * 0.05;
+          this.grid_position += delta * 0.05 * Math.pow(SEMITONE_RATIO, this.pressed_key_index);
         }
         this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
         this.prev_frame = now;
