@@ -31,7 +31,7 @@
       {% if page.extra.og_image %}
         <meta property="og:image" content="{{ page.permalink | safe }}{{ page.extra.og_image }}">
       {% else %}
-        <meta property="og:image" content="{{ config.base_url | safe }}/ibis.png">
+        <meta property="og:image" content="{{ config.base_url | safe }}/og_image.png">
       {% endif %}
     {% elif section %}
       <meta property="og:title" content="{% block title %}{% endblock title %}">
