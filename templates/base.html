@@ -6,6 +6,7 @@
     <meta property="og:locale" content="en_US">
     <meta property="og:site_name" content="Purple Earth Hypothesis">
     <meta property="og:type" content="website">
+    <meta name="color-scheme" content="dark">
 
     {# Required for correct display on mobile devices. Without this some links and headings are rendered too small. #}
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,7 +31,7 @@
       {% if page.extra.og_image %}
         <meta property="og:image" content="{{ page.permalink | safe }}{{ page.extra.og_image }}">
       {% else %}
-        <meta property="og:image" content="{{ config.base_url | safe }}/logo512x256.png">
+        <meta property="og:image" content="{{ config.base_url | safe }}/ibis.png">
       {% endif %}
     {% elif section %}
       <meta property="og:title" content="{% block title %}{% endblock title %}">
@@ -43,7 +44,7 @@
       {% endif %}
     {% endif %}
 
-    <meta property="og:image" content="{{ config.base_url | safe }}/logo512x256.png">
+    <meta property="og:image" content="{{ config.base_url | safe }}/ibis.png">
 
 
     <link rel="icon" type="image/x-icon" href="{{ config.base_url | safe }}/favicon.png">
