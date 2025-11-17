@@ -48,10 +48,10 @@ class Synth {
   constructor() {
     this.ctx = new AudioContext();
     this.super_saw1 = new SuperSaw(this.ctx, 2, 0.01);
-    this.super_saw1.gain.gain.setValueAtTime(0.125, this.ctx.currentTime);
+    this.super_saw1.gain.gain.setValueAtTime(0.025, this.ctx.currentTime);
     this.super_saw1.start();
     this.super_saw2 = new SuperSaw(this.ctx, 2, 0.01);
-    this.super_saw2.gain.gain.setValueAtTime(0.125, this.ctx.currentTime);
+    this.super_saw2.gain.gain.setValueAtTime(0.025, this.ctx.currentTime);
     this.super_saw2.start();
     this.lpf = this.ctx.createBiquadFilter();
     this.lpf.type = "lowpass";
