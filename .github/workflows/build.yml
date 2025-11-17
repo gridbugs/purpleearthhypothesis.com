@@ -10,5 +10,5 @@ jobs:
       - name: build_and_deploy
         uses: shalzz/zola-deploy-action@v0.21.0
         env:
-          BUILD_FLAGS: --base-url https://gridbugs.github.io/purpleearthhypothesis.org --drafts
+          BUILD_FLAGS: --base-url https://gridbugs.github.io/purpleearthhypothesis.com --drafts
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
