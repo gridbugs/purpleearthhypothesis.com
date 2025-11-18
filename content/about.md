@@ -20,7 +20,7 @@ started building synthesizers.
 Some other places around the internet you can find me:
 - [gridbugs.org](https://www.gridbugs.org), my more general blog
 - [youtube](https://www.youtube.com/@gridbugstv/videos), where I mostly upload synth-related videos
-- [github](https://github.com/gridbugs), where I host the code and design for my various synth projects, notably [CAW](https://github.com/gridbugs/caw), the [modular briefcase synth](https://github.com/gridbugs/briefcase-synth), [llama (the precursor to CAW)](https://github.com/gridbugs/llama), and [this website](https://github.com/gridbugs/purpleearthhypothesis.com).
+- [github](https://github.com/gridbugs), where I host the code and design for my various synth projects, notably [CAW](https://github.com/gridbugs/caw), the [modular briefcase synth](https://github.com/gridbugs/briefcase-synth), [llama (the precursor to CAW)](https://github.com/gridbugs/llama), and [this website](https://github.com/gridbugs/purpleearthhypothesis.com)
 - [mastodon](https://hachyderm.io/@gridbugs), come say hi!
 
 I can also be emailed at admin AT gridbugs DOT org.
