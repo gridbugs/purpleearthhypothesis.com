@@ -162,6 +162,9 @@
         star_container.appendChild(make_star());
       }
     </script>
-    <script type="text/javascript" src="keyboard.js"></script>
+    <script type="text/javascript" src="{{ config.base_url | safe }}/keyboard.js"></script>
+    <script>
+      run_keyboard("{{ config.base_url | safe }}/assets/keyboard-color-map.png");
+    </script>
   </body>
 </html>

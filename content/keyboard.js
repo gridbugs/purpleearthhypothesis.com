@@ -136,13 +136,13 @@ class ColorMap {
   }
 }
 
-function load_color_map() {
+function load_color_map(color_map_url) {
   const canvas = document.createElement("canvas");
   canvas.width = WIDTH_PX;
   canvas.height = HEIGHT_PX;
   const ctx = canvas.getContext("2d");
   const image = new Image(WIDTH_PX, HEIGHT_PX);
-  image.src = "assets/keyboard-color-map.png";
+  image.src = color_map_url;
   return new Promise(resolve => {
     image.addEventListener("load", _ => {
       ctx.drawImage(image, 0, 0);
@@ -305,12 +305,8 @@ class Keyboard {
   }
 }
 
-
-async function main() {
-  const color_map = await load_color_map();
+async function run_keyboard(color_map_url) {
+  const color_map = await load_color_map(color_map_url);
   const keyboard = new Keyboard(color_map);
   keyboard.registerAll();
 }
-
-
-main();
