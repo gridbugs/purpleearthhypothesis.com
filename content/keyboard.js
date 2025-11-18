@@ -55,7 +55,7 @@ class Synth {
     this.super_saw2.start();
     this.lpf = this.ctx.createBiquadFilter();
     this.lpf.type = "lowpass";
-    this.lpf.frequency.setValueAtTime(0, this.ctx.currentTime);
+    this.lpf.frequency.setValueAtTime(1, this.ctx.currentTime);
     this.lpf.Q.setValueAtTime(5, this.ctx.currentTime);
     this.amp = this.ctx.createGain();
     this.super_saw1.connect(this.lpf);
@@ -64,11 +64,16 @@ class Synth {
     this.amp.connect(this.ctx.destination);
   }
 
-  playNote(index) {
+  cancelScheduledValues() {
     this.amp.gain.cancelScheduledValues(this.ctx.currentTime);
     this.lpf.frequency.cancelScheduledValues(this.ctx.currentTime);
+  }
+
+  playNote(index) {
+    this.cancelScheduledValues();
     this.amp.gain.exponentialRampToValueAtTime(1, this.ctx.currentTime + 0.1);
-    this.lpf.frequency.exponentialRampToValueAtTime(20000, this.ctx.currentTime + 0.1 );
+    this.lpf.frequency.exponentialRampToValueAtTime(20000, this.ctx.currentTime + 0.1);
+
     this.super_saw1.setFrequency(note_index_to_freq_hz(index));
     this.super_saw2.setFrequency(note_index_to_freq_hz(index) * 2);
   }
@@ -176,6 +181,7 @@ class Keyboard {
       });
     });
     this.pressed_key_index = -1;
+    this.last_pressed_key_index = -1;
     this.grid_position = 0;
     this.grid_element = document.getElementById("grid");
     this.prev_frame = undefined;
@@ -241,6 +247,7 @@ class Keyboard {
     const elements = this.getKeyElements(i);
     const bounding_rect = this.getBoundingRect();
     this.pressed_key_index = i;
+    this.last_pressed_key_index = i;
     for (const element of elements) {
       element.classList.remove("hover");
       element.style.transform = `translate(0, ${bounding_rect.height * 0.04}px)`;
@@ -259,16 +266,16 @@ class Keyboard {
 
   moveGridLoop() {
     requestIdleCallback(_ => {
-      if (this.pressed_key_index === -1) {
-        this.grid_speed *= 0.995;
-        if (this.grid_speed < 0.2) {
-          this.grid_speed = 0;
-        }
-      }
       const now = Date.now();
       if (this.prev_frame !== undefined) {
         const delta = now - this.prev_frame;
-        this.grid_position += delta * 0.05 * Math.pow(SEMITONE_RATIO, this.pressed_key_index) * this.grid_speed;
+        if (this.pressed_key_index === -1) {
+          this.grid_speed -= 0.00015 * delta;
+          if (this.grid_speed < 0.01) {
+            this.grid_speed = 0;
+          }
+        }
+        this.grid_position += delta * 0.05 * Math.pow(SEMITONE_RATIO, this.last_pressed_key_index) * Math.pow(this.grid_speed, 2);
       }
       this.grid_element.style.backgroundPositionY = `${this.grid_position}px`;
       this.prev_frame = now;
