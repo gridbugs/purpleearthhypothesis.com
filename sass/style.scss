@@ -1,5 +1,7 @@
 @charset "utf-8";
 
+$common-space: 24px;
+
 :root {
   color-scheme: dark;
   font-family: Monospace;
@@ -41,7 +43,7 @@ body {
   flex-grow: 0;
   position: relative;
   margin: 0;
-  padding: 24px;
+  padding: $common-space;
   padding-top: 0px;
   width: 750px;
   margin-left: auto;
@@ -354,5 +356,12 @@ footer {
         margin-right: 1ch;
       }
     }
+  }
+}
+
+.image-right {
+  img {
+    float: right;
+    margin-left: $common-space;
   }
 }
