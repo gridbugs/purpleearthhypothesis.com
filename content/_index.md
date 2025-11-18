@@ -20,6 +20,9 @@ This is the first electronics project I've finished, though of course nothing is
 truly ever finished. All the circuitry is made on stripboard. The hardest part
 turned out to getting all the physical components to fit together.
 
+The circuit diagrams for all the modules can be found
+in [this git repo](https://github.com/gridbugs/briefcase-synth).
+
 </div>
 <div>
 
