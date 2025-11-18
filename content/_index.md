@@ -4,78 +4,76 @@ title = "Purple Earth Hypothesis"
 
 # Purple Earth Hypothesis
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum non arcu
-vitae ante hendrerit ultricies aliquet vitae felis. Suspendisse in quam
-feugiat, rutrum mauris ac, elementum neque. Phasellus scelerisque massa non
-quam malesuada elementum. Ut eleifend nunc velit, ac placerat elit aliquam eu.
-Aliquam eget velit hendrerit, euismod urna in, condimentum enim. Maecenas id
-lacus in velit interdum ullamcorper. Morbi eu pellentesque turpis. Sed tempus
-sodales purus, a faucibus nulla fringilla et. Phasellus in sodales enim. Nulla
-elit dolor, ultrices imperdiet libero eget, lobortis volutpat nunc. Sed
-tincidunt quam sapien, vitae egestas eros dapibus a. In suscipit laoreet nisl
-mattis lobortis. Nullam dignissim leo rutrum, pulvinar nisl a, blandit arcu.
-Phasellus ultrices convallis dapibus. Donec nec neque venenatis, ultricies odio
-vulputate, ornare lectus. Quisque a justo commodo, elementum justo vitae,
-bibendum lorem.
+Welcome to my DIY synthesizer website. Here are some of my projects. Stay tuned for updates!
 
-Nunc a porta orci. Sed imperdiet ac nisl et eleifend. Nulla sed massa ligula.
-Sed quis enim felis. Phasellus sed laoreet massa. Suspendisse imperdiet
-imperdiet lorem sit amet ultricies. Fusce a ante et ligula vestibulum mattis
-sit amet ut ipsum. Suspendisse auctor dui ac eleifend hendrerit.
+<div class="image-right">
+<div>
 
-Maecenas congue diam est, eget ultrices sem efficitur sed. Nullam ut tortor ac
-dui efficitur iaculis non ultrices orci. In sed ante eget enim scelerisque
-aliquam in a tortor. Maecenas condimentum mi nunc, in lobortis odio consequat
-tincidunt. Aenean imperdiet, mi nec mattis molestie, mi mauris vulputate augue,
-vel tincidunt nisi neque non ligula. Vestibulum ligula libero, venenatis
-imperdiet justo nec, volutpat tincidunt risus. Duis nisl ipsum, mollis eget
-erat id, eleifend pharetra nisi. Vivamus mollis dolor sem, eget tempus neque
-vehicula id. Vestibulum pharetra massa vitae libero fermentum, ac molestie orci
-interdum. Sed a lacus sed nunc sagittis posuere eget eget dolor. Donec eleifend
-ex eget vulputate facilisis. Nullam ut sem luctus, ullamcorper nisi eu, lacinia
-tortor. Nulla feugiat vel mauris vel accumsan. Morbi sit amet mattis ipsum.
-Etiam est nisi, dignissim sit amet tristique vel, interdum tempus eros. Duis in
-nisl at felis ornare sollicitudin at eu lectus.
+## Modular Briefcase Synth
 
-Ut vel ligula fringilla, luctus urna et, dignissim lectus. Pellentesque congue,
-lectus non finibus ullamcorper, nisl nisl tristique metus, sit amet tempus elit
-nibh scelerisque nunc. Pellentesque non felis eget nisi semper imperdiet.
-Suspendisse auctor risus sem, id ultrices arcu placerat luctus. Nullam pharetra
-mauris vel turpis venenatis, quis luctus neque rhoncus. Maecenas nec risus et
-ligula tincidunt mollis. Nam ac lacinia nibh, et condimentum magna. Donec
-dapibus quis nisl sed elementum. Duis blandit neque sit amet viverra elementum.
-Suspendisse potenti. Phasellus finibus metus at risus mattis tincidunt.
+An analog modular synthesizer built into a briefcase. I made it during the
+second half of 2024. It has 10 or so modules which can be patched using banana
+jack test leads. There's a MIDI to control voltage adapter (in a takeaway
+container!) which allows it to be controlled by a MIDI keyboard.
 
-Cras ullamcorper odio vel faucibus ullamcorper. Proin ut molestie eros. Nullam
-non aliquam nunc, quis suscipit nulla. Integer commodo orci nec neque semper
-auctor. In porttitor gravida purus non dictum. Quisque eu leo varius, pretium
-ipsum eu, sagittis ipsum. Phasellus sed tortor risus.
+This is the first electronics project I've finished, though of course nothing is
+truly ever finished. All the circuitry is made on stripboard. The hardest part
+turned out to getting all the physical components to fit together.
 
-Maecenas congue diam est, eget ultrices sem efficitur sed. Nullam ut tortor ac
-dui efficitur iaculis non ultrices orci. In sed ante eget enim scelerisque
-aliquam in a tortor. Maecenas condimentum mi nunc, in lobortis odio consequat
-tincidunt. Aenean imperdiet, mi nec mattis molestie, mi mauris vulputate augue,
-vel tincidunt nisi neque non ligula. Vestibulum ligula libero, venenatis
-imperdiet justo nec, volutpat tincidunt risus. Duis nisl ipsum, mollis eget
-erat id, eleifend pharetra nisi. Vivamus mollis dolor sem, eget tempus neque
-vehicula id. Vestibulum pharetra massa vitae libero fermentum, ac molestie orci
-interdum. Sed a lacus sed nunc sagittis posuere eget eget dolor. Donec eleifend
-ex eget vulputate facilisis. Nullam ut sem luctus, ullamcorper nisi eu, lacinia
-tortor. Nulla feugiat vel mauris vel accumsan. Morbi sit amet mattis ipsum.
-Etiam est nisi, dignissim sit amet tristique vel, interdum tempus eros. Duis in
-nisl at felis ornare sollicitudin at eu lectus.
+</div>
+<div>
 
-Ut vel ligula fringilla, luctus urna et, dignissim lectus. Pellentesque congue,
-lectus non finibus ullamcorper, nisl nisl tristique metus, sit amet tempus elit
-nibh scelerisque nunc. Pellentesque non felis eget nisi semper imperdiet.
-Suspendisse auctor risus sem, id ultrices arcu placerat luctus. Nullam pharetra
-mauris vel turpis venenatis, quis luctus neque rhoncus. Maecenas nec risus et
-ligula tincidunt mollis. Nam ac lacinia nibh, et condimentum magna. Donec
-dapibus quis nisl sed elementum. Duis blandit neque sit amet viverra elementum.
-Suspendisse potenti. Phasellus finibus metus at risus mattis tincidunt.
+![](briefcase-synth-desk.jpg)
 
-Cras ullamcorper odio vel faucibus ullamcorper. Proin ut molestie eros. Nullam
-non aliquam nunc, quis suscipit nulla. Integer commodo orci nec neque semper
-auctor. In porttitor gravida purus non dictum. Quisque eu leo varius, pretium
-ipsum eu, sagittis ipsum. Phasellus sed tortor risus.
+</div>
+</div>
 
+[Here](https://youtu.be/dpt2oC0l_L0?si=J7vUAJJ4z86MYW4o)'s a video of this synth
+in action.
+
+<div class="image-span-width">
+
+![](briefcase-synth-perf.jpg)
+
+</div>
+
+
+<div class="image-right">
+<div>
+
+## Combinatorial Audio Workstation (CAW)
+
+[CAW](https://github.com/gridbugs/caw) is a software-defined modular
+synthesizer which I've been developing since 2023. It's implemented as a Rust library allowing modules to be defined
+and composed programatically. Patches can be static, where the synthesizer is a
+program that you compile and run, _or_ patches can be dynamically built up in a
+jupyter notebook. [Here](https://www.youtube.com/watch?v=vAAUqQbA4qs)'s an
+example of using jupyter to incrementally write a patch for CAW.
+
+CAW works on Windows, macOS, Linux, and [web
+browsers](https://gridbugs.github.io/bevy-caw-experiment/).
+
+In addition to
+building instruments for live performance, CAW can be built into other projects
+to generate sounds or music. I've used it in a couple of game jams
+[here](https://gridbugs.itch.io/scope-creep) and
+[here](https://gridbugs.itch.io/electric-organ).
+
+</div>
+<div>
+
+![](caw.jpg)
+
+</div>
+</div>
+
+There are a bunch of examples of CAW in action over on my
+[youtube](https://www.youtube.com/@gridbugstv/videos). Here are some that I'm
+particularly happy with:
+- [Ear candy filter sweep to show off stereo
+  oscillographics](https://www.youtube.com/watch?v=fArGverzl4A)
+- [Intro to Dreams by Van Halen to show off the chorus
+  module](https://www.youtube.com/watch?v=8OR7GkginNw)
+- [Arpegiator demo](https://www.youtube.com/watch?v=PjnEx5cQ0oI)
+- [Vocoder demo](https://www.youtube.com/watch?v=lwuXFWOIe1Y)
+- [Bad Apple MIDI stress test](https://www.youtube.com/watch?v=0BZwpZHrmQM)
