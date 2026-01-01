@@ -381,3 +381,25 @@ footer {
   }
 }
 
+.upside-down {
+  transform: rotateX(180deg);
+}
+
+// Next and previous post links
+div.next-prev-nav-container ul {
+  padding: 0;
+  margin: 0;
+  padding-top: 20px;
+  padding-bottom: 4px;
+  list-style: none;
+  display: flex;
+
+  li.nav-prev {
+    padding-right: 40px;
+  }
+
+  li.nav-next {
+    padding-left: 40px;
+    margin-left: auto;
+  }
+}
