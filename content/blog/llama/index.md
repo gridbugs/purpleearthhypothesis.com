@@ -1,7 +1,8 @@
 +++
 title = "Llama - A Programmable Modular Synth in OCaml"
-date = 2026-01-01
+date = 2026-01-02
 path = "llama"
+draft = true
 
 [taxonomies]
 tags = ["project", "software"]
@@ -9,7 +10,5 @@ tags = ["project", "software"]
 [extra]
 og_image = "screenshot.png"
 +++
-
-Starting out the year with a series of posts about my past synth projects.
 
 ![A purple oscilloscope visualization of a sound wave in a window](screenshot.png)
