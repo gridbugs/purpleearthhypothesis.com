@@ -4,7 +4,7 @@ title = "Purple Earth Hypothesis"
 
 # Purple Earth Hypothesis
 
-Welcome to my DIY synthesizer website. Here are some of my projects. Stay tuned for updates!
+Welcome to my DIY synthesizer blog. Here are some of my projects.
 
 <div class="image-right">
 <div>

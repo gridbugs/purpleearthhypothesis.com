@@ -356,6 +356,9 @@ footer {
         display: block;
         margin-right: 1ch;
       }
+      li.first-rhs {
+        margin-left: auto;
+      }
     }
   }
 }
@@ -401,5 +404,11 @@ div.next-prev-nav-container ul {
   li.nav-next {
     padding-left: 40px;
     margin-left: auto;
+  }
+}
+
+p {
+  code {
+    font-weight: bold;
   }
 }

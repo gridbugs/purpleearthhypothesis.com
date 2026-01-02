@@ -12,5 +12,5 @@ generate_robots_txt = true
 
 [markdown]
 highlight_code = true
-highlight_theme = "inspired-github"
+highlight_theme = "axar"
 smart_punctuation = true
