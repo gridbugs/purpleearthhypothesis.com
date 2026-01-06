@@ -18,7 +18,7 @@ building an entire synthesizer voice from scratch on breadboards. I followed alo
 Step one was getting the oscillator working on a breadboard.
 I used a AS3340 oscillator on-a-chip, which is a clone of the legendary CEM3340.
 All I was trying to do was add the supporting components according to the AS3340
-manual and connect it to power, but still it took several weekends.
+manual and connect it to power, but still it took several weekends to make it work.
 The problems were components not making good contact with the
 breadboard, and the AS3340 chip being faulty, probably because I broke it without realizing.
 Fortunately I had spares.
