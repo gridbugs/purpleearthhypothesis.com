@@ -213,7 +213,7 @@ CAW is easy to include in other Rust projects. Here
 are some of my projects that use CAW:
  - [Generative Music
    Experiment](https://gridbugs.github.io/generative-music-experiment/),
-   plays random notes while maintaining a musical "context" so the music
+   plays random notes while maintaining a musical context so the music
    feels like it's in a particular key and mode.
  - [Electric Organ](https://gridbugs.itch.io/electric-organ) is a roguelike I
    made for a game jam where the music is procedurally generated along with game
