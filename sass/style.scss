@@ -384,6 +384,16 @@ footer {
   }
 }
 
+p img {
+  display: block;
+  margin: 0 auto;
+}
+
+div iframe {
+  display: block;
+  margin: 0 auto;
+}
+
 .upside-down {
   transform: rotateX(180deg);
 }

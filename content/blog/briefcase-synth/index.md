@@ -2,6 +2,7 @@
 title = "Briefcase Synth"
 date = 2026-01-31
 path = "briefcase-synth"
+description = "I made an analog modular synthesizer in a briefcase."
 
 [taxonomies]
 tags = ["project", "hardware"]
