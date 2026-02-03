@@ -17,7 +17,7 @@ of OCaml development tooling (read more about this [here](https://www.gridbugs.o
 This post covers the state of CAW as of around the end of 2024 when I rewrote it
 pretty much from scratch with an eye for performance.
 I'll cover the basic concepts in this post, as well as some considerations in
-switching from OCaml to Rust, and in part 2 I'll focus on what I've changed and
+switching from OCaml to Rust, and in [Part 2](@/blog/caw-part-2/index.md) I'll focus on what I've changed and
 added since then.
 
 ![The CAW logo - a crow playing a keytar](caw.jpg)
@@ -218,3 +218,5 @@ are some of my projects that use CAW:
  - [Electric Organ](https://gridbugs.itch.io/electric-organ) is a roguelike I
    made for a game jam where the music is procedurally generated along with game
    content.
+
+Read more in [CAW Part 2](@/blog/caw-part-2/index.md).
