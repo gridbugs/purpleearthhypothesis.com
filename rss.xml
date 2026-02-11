@@ -1,0 +1,934 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+      <title>Purple Earth Hypothesis</title>
+      <link>https://gridbugs.github.io/purpleearthhypothesis.com</link>
+      <description></description>
+      <generator>Zola</generator>
+      <language>en</language>
+      <atom:link href="https://gridbugs.github.io/purpleearthhypothesis.com/rss.xml" rel="self" type="application/rss+xml"/>
+      <lastBuildDate>Wed, 11 Feb 2026 00:00:00 +0000</lastBuildDate>
+      <item>
+          <title>CAW (part 3): Live Coding with CAW</title>
+          <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-3/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-3/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-3/">&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;caw&quot;&gt;CAW&lt;&#x2F;a&gt; is a Rust library for making synthesizers.
+This post is about using CAW to perform music live by writing code into a Jupyter notebook.&lt;&#x2F;p&gt;
+&lt;p&gt;Previous posts about CAW:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-1&#x2F;&quot;&gt;CAW (part 1): A Rust library for making Synthesizers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-2&#x2F;&quot;&gt;CAW (part 2): Optimizing CAW&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Live coding is a type of performance where music (or other art) is generated in
+real time by writing and evaluating code. Dedicated programming languages exist
+for live coding, such as &lt;a href=&quot;https:&#x2F;&#x2F;tidalcycles.org&quot;&gt;Tidal Cycles&lt;&#x2F;a&gt;, and performers
+usually write code in an editor that’s tightly integrated into the evaluation of the
+program. If your program is generating music you want to be able to change the program
+and have the change take effect without needing to restart the program.&lt;&#x2F;p&gt;
+&lt;p&gt;The standard workflow for programming in Rust is to write code, then compile the code, then
+run the resulting executable. If you change the code you need to restart the executable
+for the change to become visible. The project &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;evcxr&#x2F;evcxr&quot;&gt;evcxr&lt;&#x2F;a&gt;
+implements a Rust REPL where programs can be evaluated line by line, and a
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;evcxr&#x2F;evcxr&#x2F;blob&#x2F;main&#x2F;evcxr_jupyter&#x2F;README.md&quot;&gt;Rust Jupyter
+Kernel&lt;&#x2F;a&gt;
+allowing Rust to be written into a Jupyter notebook.
+Code in one cell can be rerun without needing to restart the entire program.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-3&#x2F;screenshot.jpg&quot; alt=&quot;Web browser showing a Jupyter notebook with a cell containing synthesizer code. There’s also a visualization window and some knob windows.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;We need to approach defining synthesizers a little differently when writing them in Jupyter.
+Take this simple program as an example which plays a sawtooth wave sweeping between 100Hz and 150Hz:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;use &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;caw::prelude::&lt;&#x2F;span&gt;&lt;span&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() -&amp;gt; Sig&amp;lt;impl SigT&amp;lt;Item = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0 &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;50.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Player::new().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; _handle &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;play_mono&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(), &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Default&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;::default()).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    std::thread::park();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The standard way of writing CAW synthesizers is to create a top level signal
+(usually by composing simpler signals) and then play it on a &lt;code&gt;Player&lt;&#x2F;code&gt;.
+We could start by just copying this program into Jupyter:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 0:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;:dep caw &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;{ path &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;&#x2F;path&#x2F;to&#x2F;caw&#x2F;source&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, features &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;player&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;] }
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 1:
+&lt;&#x2F;span&gt;&lt;span&gt;use &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;caw::prelude::&lt;&#x2F;span&gt;&lt;span&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 2:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() -&amp;gt; Sig&amp;lt;impl SigT&amp;lt;Item = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0 &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;5.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Player::new().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; _handle &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;play_mono&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(), &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Default&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;::default()).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    std::thread::park();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Note the first cell where we tell evcxr about the notebook’s external dependencies.
+Also note the call to &lt;code&gt;main()&lt;&#x2F;code&gt;. Jupyter doesn’t automatically call the &lt;code&gt;main&lt;&#x2F;code&gt; function, but allows
+code to be written outside of functions which is run when the containing cell is evaluated.
+With that in mind we can get rid of the entire &lt;code&gt;main&lt;&#x2F;code&gt; function and put its contents in the top level.
+This also lets us get rid of the &lt;code&gt;std::thread::park()&lt;&#x2F;code&gt; previously required to stop &lt;code&gt;main()&lt;&#x2F;code&gt; from returning
+immediately. The handle returned by &lt;code&gt;player.play_mono(...)&lt;&#x2F;code&gt; stays in scope in the notebook forever
+so the sound will keep playing until the kernel is stopped.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 2:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() -&amp;gt; Sig&amp;lt;impl SigT&amp;lt;Item = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0 &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;50.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Player::new().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; _handle &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;play_mono&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(), &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Default&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;::default()).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This runs and we hear the frequency sweep. Say we want to change the base frequency from 100Hz
+to 200Hz. If you update the code accordingly and the rerun the cell, not only will the base
+frequency change but the sweep will reset to its start position. The entire state of the program
+has been reset. This isn’t ideal because if you’re generating a looping melody and you change
+some aspect of the melody, applying the change will cause the melody to restart from the beginning
+of the loop. You could try to synchronize your changes with the start of the loop, but let’s
+find a better way to update running synthesizers without resetting their state.&lt;&#x2F;p&gt;
+&lt;p&gt;First, a false start: Split the cell into two cells.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 2:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() -&amp;gt; Sig&amp;lt;impl SigT&amp;lt;Item = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0 &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;50.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 3:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Player::new().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; _handle &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; player.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;play_mono&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signal&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(), &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Default&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;::default()).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This might seem like it would fix the problem. The player is now only created once,
+and updating the cell containing the definition of &lt;code&gt;signal&lt;&#x2F;code&gt; doesn’t cause the signal
+to be recreated. Unfortunately that’s exactly the reason why updating the &lt;code&gt;signal&lt;&#x2F;code&gt; function
+and re-evaluating its cell has &lt;em&gt;no effect&lt;&#x2F;em&gt;! All we’ve done is redefine the function, but
+it hasn’t been called yet, so nothing happens to the sound.&lt;&#x2F;p&gt;
+&lt;p&gt;Instead we need a way of reaching into a signal and changing a value without
+redefining or restarting the signal. To make this possible, CAW introduces a
+new collection of types called &lt;code&gt;Cell&lt;&#x2F;code&gt;s. A &lt;code&gt;Cell&lt;&#x2F;code&gt; is a container which can store
+a signal (an implementation of the &lt;code&gt;SigT&lt;&#x2F;code&gt; trait) inside it. A &lt;code&gt;Cell&lt;&#x2F;code&gt; is &lt;em&gt;also&lt;&#x2F;em&gt;
+a signal, and it acts like the signal it contains, and has some extra methods
+to allow replacing the stored signal with some new signal.&lt;&#x2F;p&gt;
+&lt;p&gt;To allow the base frequency of the sweep to be dynamically changed, we’ll replace the static &lt;code&gt;100.0&lt;&#x2F;code&gt;
+in the code with a &lt;code&gt;Cell&lt;&#x2F;code&gt; defined globally, and then change the &lt;code&gt;Cell&lt;&#x2F;code&gt;’s value once the program
+starts running. Rust functions aren’t allowed to access variables defined in
+external scopes (only constants and other functions), so we first need to take a
+little detour to change the way the signal is defined. One option might be to just define the
+signal globally rather than with a function, however a limitation of evcxr is that
+type inference for global variables seems to struggle with functions returning &lt;code&gt;impl &amp;lt;Trait&amp;gt;&lt;&#x2F;code&gt;
+which is very common in CAW. We could explicitly state the type:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo: &lt;&#x2F;span&gt;&lt;span&gt;... = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; signal: &lt;&#x2F;span&gt;&lt;span&gt;... = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0 &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;50.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…however unboxed signals tend to have very long types that reflect the types of all the simpler signals they are composed of. For example the type of &lt;code&gt;lfo&lt;&#x2F;code&gt; is:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Sig&amp;lt;SignedTo01&amp;lt;Oscillator&amp;lt;Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and the type of &lt;code&gt;signal&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Sig&amp;lt;Oscillator&amp;lt;Saw, Sig&amp;lt;OpScalarSig&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, OpSigScalar&amp;lt;SignedTo01&amp;lt;Oscillator&amp;lt;Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt;&amp;gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Instead, let’s define the signal with a closure and capture the &lt;code&gt;Cell&lt;&#x2F;code&gt; variable
+storing the base frequency. While we’re at it, let’s change how the player is
+created to be more ergonomic for notebook programming. CAW has a &lt;code&gt;live_stereo&lt;&#x2F;code&gt; function
+which creates a player and returns a &lt;code&gt;Cell&lt;&#x2F;code&gt; whose contents will be played. We can
+update its contents with a signal to play that signal, and then later update its contents
+with the signal &lt;code&gt;0.0&lt;&#x2F;code&gt; to silence the player. That way we no longer have to stop the entire
+notebook to make the sound stop!&lt;&#x2F;p&gt;
+&lt;p&gt;One change at a time. First, here’s the notebook refactored to use &lt;code&gt;live_stereo&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 0:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;:dep caw &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;{ path &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;&#x2F;path&#x2F;to&#x2F;caw&#x2F;source&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, features &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;live&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;] }
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 1:
+&lt;&#x2F;span&gt;&lt;span&gt;use &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;caw::prelude::&lt;&#x2F;span&gt;&lt;span&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 2:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; out &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;live_stereo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 3:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;out.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;set&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(|| {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0 &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;50.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;});
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then to replace the output signal with silence, run:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;out.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;set&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(|| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This uses the “live” feature which enables the &lt;code&gt;live_stereo&lt;&#x2F;code&gt; function.&lt;&#x2F;p&gt;
+&lt;p&gt;Notice how the &lt;code&gt;set&lt;&#x2F;code&gt; method takes a closure which &lt;em&gt;returns&lt;&#x2F;em&gt; a signal rather than just a signal.
+That’s because &lt;code&gt;out&lt;&#x2F;code&gt; is actually a &lt;em&gt;pair&lt;&#x2F;em&gt; of &lt;code&gt;Cell&lt;&#x2F;code&gt;s corresponding to the left and right audio
+channels. The &lt;code&gt;set&lt;&#x2F;code&gt; method calls the closure twice and sets the left and right &lt;code&gt;Cell&lt;&#x2F;code&gt; to the result
+of the respective calls (there’s also a &lt;code&gt;set_channel&lt;&#x2F;code&gt; method which passes the channel to the
+closure for more control over stereo audio).&lt;&#x2F;p&gt;
+&lt;p&gt;Now, to allow changing the base frequency of the sweep, update the definition of the sweep
+to use a &lt;code&gt;Cell&lt;&#x2F;code&gt; for the base frequency:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 3:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; base_freq_hz &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;cell&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;out.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;set&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(|| {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; lfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;signed_to_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Saw, base_freq_hz.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(lfo &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;50.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;});
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now in a later cell, update the &lt;code&gt;base_freq_hz&lt;&#x2F;code&gt; value:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;base_freq_hz.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;set&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;200.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…and the base frequency will change without affecting the timing of the sweep itself.&lt;&#x2F;p&gt;
+&lt;p&gt;This time &lt;code&gt;set&lt;&#x2F;code&gt; just takes a signal, since &lt;code&gt;base_freq_hz&lt;&#x2F;code&gt; is a regular &lt;code&gt;Cell&lt;&#x2F;code&gt;.
+&lt;code&gt;Cell&lt;&#x2F;code&gt;s can contain arbitrary signals - not just constant values - so we
+could do something like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;base_freq_hz.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;set&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100. &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Sine, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;8.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;10.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…so that the base frequency is modulated by another low-frequency oscillator.&lt;&#x2F;p&gt;
+&lt;p&gt;Or we could open a window with a knob allowing the base frequency to be tuned manually.
+To enable this, update the dependencies in the first cell:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 0:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;:dep caw &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;{ path &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;&#x2F;path&#x2F;to&#x2F;caw&#x2F;source&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, features &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;live&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;widgets&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;] }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then run:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;base_freq_hz.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;set&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;knob&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#ffd700;&quot;&gt;&amp;quot;base freq&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Knobs by default yield values between 0 and 1, so multiply the knob by 100 to
+allow tuning frequencies between 0Hz and 100Hz.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;Cell&lt;&#x2F;code&gt;s are how CAW allows synthesizer configurations to be dynamically changed in a running
+notebook without resetting the synthesizer’s state. They require some planning when defining
+signals, as all the &lt;code&gt;Cell&lt;&#x2F;code&gt;s a signal will use must be declared ahead of time, and the broader
+structure of a signal still can’t be changed without resetting its state. Despite these constraints,
+I’m still amazed that this works at all! I think of Rust as a static language with a big conceptual
+gap between the code you write and the program that runs, and being able to change parts of a program
+while the rest of the program continues running is awesome.&lt;&#x2F;p&gt;
+&lt;p&gt;CAW’s visualizations work in notebooks! To view a visualization of the waveform, update the cell with &lt;code&gt;live_stereo()&lt;&#x2F;code&gt; to:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Cell 1:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; out &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;live_stereo_viz_udp&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Default&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;::default());
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…and restart the notebook.&lt;&#x2F;p&gt;
+&lt;p&gt;The function &lt;code&gt;live_stereo_viz_udp&lt;&#x2F;code&gt; gives a hint about how the visualization works.
+CAW uses SDL2 for its visualization, and SDL2 needs to run from the main thread of the program.
+There’s no way to satisfy that constraint when opening a window from a notebook, so the only
+way to have the notebook open a window is if it runs a new process and have that process use SDL2
+to render the visualization on its main thread. But this means CAW running in the notebook needs to
+be able to send the data to visualize to the new process, and CAW sends this data over a UDP socket.&lt;&#x2F;p&gt;
+&lt;p&gt;While often used for communication
+across computer networks, UDP works just fine as an inter-process communication protocol, and thanks
+to its ubiquity as a transport layer protocol for the internet, it’s implemented everywhere; I don’t need
+to find a separate IPC mechanism for Windows vs Unix machines.&lt;&#x2F;p&gt;
+&lt;p&gt;Knobs are also rendered with SDL2 and each knob is a separate process which communicates with the CAW process
+by sending MIDI commands over UDP sockets.
+I didn’t realize this at the time but it’s actually quite common to use UDP as a transport
+protocol for synthesizer software and hardware.&lt;&#x2F;p&gt;
+&lt;p&gt;To use visualizations and widgets you’ll need to have a pair of programs installed somewhere in your
+&lt;code&gt;PATH&lt;&#x2F;code&gt;: &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;caw_viz_udp_app&quot;&gt;caw_viz_udp_app&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;caw_midi_udp_widgets_app&quot;&gt;caw_midi_udp_widgets_app&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;E.g., run:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#191919;color:#ffffff;&quot;&gt;&lt;code&gt;&lt;span&gt;$ cargo install caw_viz_udp_app caw_midi_udp_widgets_app
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;These are the programs that CAW will run when opening visualization or knob windows.&lt;&#x2F;p&gt;
+&lt;p&gt;There’s a Nix project &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;caw-notebooks&quot;&gt;here&lt;&#x2F;a&gt; that
+sets up all the necessary dependencies for using CAW in a Jupyter notebook. You’ll
+also need a local checkout of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;caw&quot;&gt;CAW&lt;&#x2F;a&gt; itself to point to
+intead of &lt;code&gt;&quot;&#x2F;path&#x2F;to&#x2F;caw&#x2F;source&quot;&lt;&#x2F;code&gt; in the code snippets on this page.&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s a video of a jam session with CAW in a Jupyter notebook:&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;vAAUqQbA4qs?si=sRShkiAMBJvDug0r&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+</description>
+      </item>
+      <item>
+          <title>CAW (part 2): Optimizing CAW</title>
+          <pubDate>Tue, 03 Feb 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/">&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;caw&quot;&gt;CAW&lt;&#x2F;a&gt; is a Rust library for making synthesizers.
+See &lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-1&#x2F;&quot;&gt;Part 1&lt;&#x2F;a&gt; for the basic idea.&lt;&#x2F;p&gt;
+&lt;p&gt;I started noticing performance limitations where input latency was frustratingly high
+when playing live music with CAW, and complex patches would cause the audio to
+start crackling, indicating the program couldn’t keep up with the sound card’s
+sample rate. I was aware of some design decisions I made for the sake of convenience
+which I expected to have a performance impact. This post is about how I rewrote
+CAW to speed it up.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-2&#x2F;caw.jpg&quot; alt=&quot;The CAW logo - a crow playing a keytar&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-was-caw-slow&quot;&gt;Why was CAW slow?&lt;&#x2F;h2&gt;
+&lt;p&gt;There were two aspects of CAW’s original design I suspected were slowing it down.
+Firstly there’s the fact that each sample was being fully computed one at a time.
+CAW synthesizers are made by composing modules, and each module typically has some
+input signals, and produce some output signals. For example a low-pass filter takes
+an input audio signal and an input signal controlling the filter cutoff, and produces an
+audio signal which is the input audio with the filter applied.
+Feeding a single sample through all the modules making up the synth, and then feeding the
+next sample and so on meant that CAW probably wasn’t making the most of the CPU’s ability
+to cache recent instructions. CPUs are better at doing a series of tight loops than one
+really big loop. Thus I expected having modules operate on batches of samples
+would yield better performance. This also fit nicely with the interface between CAW
+and the sound driver provided by the Rust library
+&lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;cpal&quot;&gt;cpal&lt;&#x2F;a&gt;, which sends batches of samples to the driver at a
+time.&lt;&#x2F;p&gt;
+&lt;p&gt;The second issue is that each signal was boxed in a &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;_&amp;gt;&amp;gt;&lt;&#x2F;code&gt; which
+was preventing the compiler from making certain optimizations. Also accessing a
+signal to apply its internal logic required performing a check for exclusive
+access to the &lt;code&gt;RefCell&amp;lt;_&amp;gt;&lt;&#x2F;code&gt;, which were guaranteed to always succeed anyway due
+to how signals were implemented, so the checks were just wasting time.&lt;&#x2F;p&gt;
+&lt;p&gt;Also speaking of exclusive access, &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;_&amp;gt;&amp;gt;&lt;&#x2F;code&gt; is not safe to pass between
+threads - something Rust enforces at compile time. This prevented CAW
+synthesizers from being easily parallelized across multiple threads. An alternative
+representation would be &lt;code&gt;Arc&amp;lt;Mutex&amp;lt;_&amp;gt;&amp;gt;&lt;&#x2F;code&gt;, however experimentally introducing
+this type led to a noticeable performance hit for single-threaded synthesizers,
+and still suffered from the other problems caused by boxing signals.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-sigt-trait&quot;&gt;The &lt;code&gt;SigT&lt;&#x2F;code&gt; trait&lt;&#x2F;h2&gt;
+&lt;p&gt;To unbox signals, I would need to do away with the &lt;code&gt;Signal&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; type, and instead
+represent signals with a &lt;em&gt;trait&lt;&#x2F;em&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub trait &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;SigT {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;type &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Item: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;sample&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;ctx&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;SigCtx) -&amp;gt; impl Buf&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;Self::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Item&amp;gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I named this &lt;code&gt;SigT&lt;&#x2F;code&gt; for brevity, as type signatures can get long in Rust.
+A &lt;code&gt;SigT&lt;&#x2F;code&gt; has an associated type &lt;code&gt;Item&lt;&#x2F;code&gt; which is the type of samples produced
+by the signal. This is usually &lt;code&gt;f32&lt;&#x2F;code&gt; for audio signals and &lt;code&gt;bool&lt;&#x2F;code&gt; for gate&#x2F;trigger signals.
+&lt;code&gt;SigCtx&lt;&#x2F;code&gt; contains information such as how many audio samples the sound driver is
+currently asking for and the audio sample rate. &lt;code&gt;SigT&lt;&#x2F;code&gt;s produce their output by
+returning an &lt;code&gt;impl Buf&amp;lt;Self::Item&amp;gt;&lt;&#x2F;code&gt; - that is, a type-erased implementation of the trait
+&lt;code&gt;Buf&amp;lt;Self::Item&amp;gt;&lt;&#x2F;code&gt;, defined like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub trait &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Buf&amp;lt;T&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    T: Clone,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) -&amp;gt; impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Iterator&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;Item = T&amp;gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;clone_to_vec&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;out&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Vec&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;T&amp;gt;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;clone_to_slice&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;stride&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;usize&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;offset&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;usize&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;out&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; [T]);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So a &lt;code&gt;Buf&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; is something which can be iterated over yielding &lt;code&gt;T&lt;&#x2F;code&gt;s, kind of
+like &lt;code&gt;IntoIterator&lt;&#x2F;code&gt; but more general in that it doesn’t mandate a specific
+iterator type, and more specialized with methods for efficiently copying the data
+to different array types for quickly transferring their contained data to the
+sound driver’s buffer.&lt;&#x2F;p&gt;
+&lt;p&gt;Looking at the type of &lt;code&gt;SigT::sample&lt;&#x2F;code&gt; it might seem like
+it needs to allocate a new buffer every frame, however &lt;code&gt;Buf&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; is implemented for &lt;code&gt;&amp;amp;Vec&amp;lt;T&amp;gt;&lt;&#x2F;code&gt;.
+A &lt;em&gt;reference&lt;&#x2F;em&gt; to a reusable &lt;code&gt;Vec&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; is a &lt;code&gt;Buf&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; which allows modules to contain their own
+output buffers. The &lt;code&gt;sample&lt;&#x2F;code&gt; method usually updates the module’s internal buffer and then just
+returns a reference to the buffer.&lt;&#x2F;p&gt;
+&lt;p&gt;For scalar types like &lt;code&gt;f32&lt;&#x2F;code&gt;, there’s a type &lt;code&gt;ConstBuf&amp;lt;_&amp;gt;&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;ConstBuf&amp;lt;T&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;value: T,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;count: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;usize&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Its implementation of &lt;code&gt;Buf&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; copies the &lt;code&gt;value&lt;&#x2F;code&gt; field &lt;code&gt;count&lt;&#x2F;code&gt; many times.
+This way there’s no need to allocate a buffer just to store a repeated
+copy of the value of a scalar.&lt;&#x2F;p&gt;
+&lt;p&gt;In addition to the &lt;code&gt;SigT&lt;&#x2F;code&gt; trait there’s also a new type &lt;code&gt;Sig&lt;&#x2F;code&gt; which wraps
+implementations of &lt;code&gt;SigT&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Sig&amp;lt;S&amp;gt;(pub S)
+&lt;&#x2F;span&gt;&lt;span&gt;where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    S: SigT;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This simplifies implementing methods for signals that are only available
+for certain &lt;code&gt;Item&lt;&#x2F;code&gt; types, and making it easier to implement other traits
+for signals such as those associated with arithmetic operators.
+The following doesn’t work well in Rust:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; Values of any pair of types L, and R, both implementing SigT&amp;lt;f32&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F; can be added together.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;impl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;L: SigT&amp;lt;Item=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;, R: SigT&amp;lt;Item=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt; Add&amp;lt;R&amp;gt; &lt;&#x2F;span&gt;&lt;span&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;L {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span&gt;...
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The problem is that it’s possible to implement &lt;code&gt;SigT&lt;&#x2F;code&gt; for a type that already
+implements &lt;code&gt;Add&lt;&#x2F;code&gt;, such as &lt;code&gt;f32&lt;&#x2F;code&gt;, and Rust only allows one implementation of a trait
+per type. Even the &lt;em&gt;possibility&lt;&#x2F;em&gt; that &lt;code&gt;SigT&lt;&#x2F;code&gt; could be implemented for &lt;code&gt;f32&lt;&#x2F;code&gt; is
+enough to cause problems. Generally I’ve found that blanket implementations
+of a trait for &lt;em&gt;all&lt;&#x2F;em&gt; implementations of some other trait should be avoided, and instead
+introduce a new type wrapping implementations of the trait, like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;impl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;L: SigT&amp;lt;Item=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;, R: SigT&amp;lt;Item=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt; Add&amp;lt;Sig&amp;lt;R&amp;gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Sig&amp;lt;L&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span&gt;...
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It seems like it might get cumbersome wrapping every signal in the &lt;code&gt;Sig&lt;&#x2F;code&gt; type, but
+the majority of signal operations are methods of &lt;code&gt;Sig&lt;&#x2F;code&gt;, not &lt;code&gt;SigT&lt;&#x2F;code&gt;, and they take
+care of wrapping their results in &lt;code&gt;Sig&lt;&#x2F;code&gt; so it’s almost never necessary to explicitly
+wrap values with &lt;code&gt;Sig&lt;&#x2F;code&gt; in client code.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;sharing&quot;&gt;Sharing&lt;&#x2F;h2&gt;
+&lt;p&gt;When composing modules with CAW, all the inputs to a module end up contained by that
+module. This was true in the original implementation as well as the new one, however
+originally all modules could be &lt;code&gt;clone&lt;&#x2F;code&gt;d. But unboxing signals means taking away the
+&lt;code&gt;Rc&amp;lt;_&amp;gt;&lt;&#x2F;code&gt; that allowed signals to be shallow-copied and passed as input to multiple
+modules. Now when you pass a signal as input to a module, it’s removed from scope
+and can’t be passed to another modules.&lt;&#x2F;p&gt;
+&lt;p&gt;In a way this is maybe more realistic, since you normally can’t plug multiple cables into
+a single jack socket (unless you use banana jacks!). And it turns out that most of the time I end up making long linear
+chains of signals with no sharing of a signal between modules.&lt;&#x2F;p&gt;
+&lt;p&gt;But sometimes you do need to split a signal and use it in two places!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-2&#x2F;stacked-banana-jacks.jpg&quot; alt=&quot;An analog synthesizer module with a stack of multiple cable terminators plugged into the same jack socket.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;To solve this I introduced a new type &lt;code&gt;SigShared&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F;&#x2F; A wrapper of a signal which can be shallow-cloned. Use this to split a
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F;&#x2F; signal into two copies of itself without duplicating all the computations
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F;&#x2F; that produced the signal. Incurs a small performance penalty as buffered
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F;&#x2F; values must be copied from the underlying signal into each instance of the
+&lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;&#x2F;&#x2F;&#x2F; shared signal.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;SigShared&amp;lt;S&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    S: SigT,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;{
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    shared_cached_sig: Arc&amp;lt;RwLock&amp;lt;SigCached&amp;lt;S&amp;gt;&amp;gt;&amp;gt;,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    buf: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Vec&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;S::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Item&amp;gt;,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;Sig&amp;lt;S&amp;gt;&lt;&#x2F;code&gt; type has a method &lt;code&gt;shared&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span&gt;shared&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) -&amp;gt; Sig&amp;lt;SigShared&amp;lt;S&amp;gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…which makes a shareable version of the signal. Note that the result is still
+wrapped in &lt;code&gt;Sig&lt;&#x2F;code&gt;, and can be used in all the same ways as a regular &lt;code&gt;Sig&amp;lt;_&amp;gt;&lt;&#x2F;code&gt;
+except it can now also be &lt;code&gt;clone&lt;&#x2F;code&gt;d and passed as input to multiple modules.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;input-latency&quot;&gt;Input Latency&lt;&#x2F;h2&gt;
+&lt;p&gt;As described above, CAW is periodically presented with buffers from the sound driver which
+it must populate with audio samples to be played. The sound card operates at a particular
+sample rate, usually around 44kHz. If the program is keeping up, this means that it’s producing
+exactly 44000 samples each second and writing those samples into the sound driver’s buffer.
+The samples from a buffer don’t start playing on the speaker until the entire buffer is
+filled, and the larger the buffer, the longer it takes to fill. CAW’s modules batch
+computations over a buffer’s worth of samples, with the intuition that computing more
+samples in a single batch will be more efficient. So larger buffers allow CAW to compute
+more samples per second, but also increase the time between computing a sample and that
+sample reaching the speaker. It’s a latency vs throughput trade-off.&lt;&#x2F;p&gt;
+&lt;p&gt;When generating music automatically, a large buffer with high latency might be ideal
+because latency doesn’t matter and the increased throughput means you can build a more
+complex sound before hitting performance issues. When playing live, you want the effect
+of a key press or other input to be effectively instant, so a smaller buffer is more
+appropriate.&lt;&#x2F;p&gt;
+&lt;p&gt;CAW lets you specify a target latency, and will choose an appropriate buffer size
+based on the target latency and the sound card’s sample rate, bearing in mind
+that some sound drivers have limits on the buffer sizes they support.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;&#x2F;h2&gt;
+&lt;p&gt;I did an experiment where I played the sum of a collection of detuned sawtooth wave
+oscillators and kept adding more oscillators until I heard a persistent crackle
+indicating the program couldn’t keep up with the sound card. On my M2 Macbook Air
+I could originally run only ~450, and after these changes I can now run ~3000.&lt;&#x2F;p&gt;
+&lt;p&gt;However, making signals into traits means that it’s possible to implement the
+trait in a way that can be sent between threads. Also it’s possible to compute
+sawtooth wave samples using SIMD instructions, so 8 different sawtooth waves
+can be computed in parallel within a single thread. On my 16-core AMD Ryzen machine
+I was able to get around 500k concurrent detuned sawtooth waves by combining
+these two approaches. There wasn’t enough headroom to also record the result,
+but here’s spooky 366600 sawtooth demo where batches of oscillators are detuned
+around different notes making a tritone chord:&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;vUG-9yRYCUc?si=CxvS8frdT-kb1-sb&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;p&gt;Adding many sawtooth waves produces an interference pattern quite different
+from the “supersaw” effect of adding 2 to 10 or so. Sometimes many
+waves drift into phase with each other producing “wubs”. Here’s a less ambitious
+48k concurrent sawtooth wave demo. If you click through to the youtube page, the description has
+a list of all the wubs with timestamps:&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;rcITgv4L76g?si=S--csTBvS0V4GyRJ&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;h2 id=&quot;what-s-next&quot;&gt;What’s next?&lt;&#x2F;h2&gt;
+&lt;p&gt;My most recent work on CAW has been focused on using it for live coding,
+where synthesizers can be built up and dynamically modified in a jupyter
+notebook with graphical UI elements for knobs and buttons.&lt;&#x2F;p&gt;
+&lt;p&gt;More on that in &lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-3&#x2F;&quot;&gt;Part 3&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>Briefcase Synth</title>
+          <pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/briefcase-synth/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/briefcase-synth/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/briefcase-synth/">&lt;p&gt;I made an analog modular synthesizer in a briefcase.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;briefcase-synth.jpg&quot; alt=&quot;A desk with a briefcase containing a modular synthesizer with patch cables, and a MIDI keyboard&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The circuitry is based on the &lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;breadboard-synth&#x2F;&quot;&gt;breadboard synthesizer&lt;&#x2F;a&gt;.
+This was a hard project to get started because I had lots of arbitrary decisions to make about the physical construction.
+I’d need to build a frame inside the briefcase that the modules would attach to, and the modules themselves would
+need a front panel that somehow physically attaches to the circuit board and also to the case.&lt;&#x2F;p&gt;
+&lt;p&gt;I bought some wood from a hardware store and some metal beams from ebay (I
+think they’re designed for server racks?) and cut everything to size with a
+hacksaw. The shape of the metal beams made them hard to fasten to the wood
+properly with screws so I ended up using some glue as well!&lt;&#x2F;p&gt;
+&lt;p&gt;There’s a metal beam at the back, middle, and front of the case, so there’s room for
+two rows of modules.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;empty-case.jpg&quot; alt=&quot;A briefcase with a wooden and metal frame build inside for holding two rows of synth modules&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s the first module - an oscillator - part-way through construction. The
+oscillator is in the foreground, and behind it is the power supply from the
+breadboard synth. The briefcase synth uses the same power supply design but in
+a form factor which fits in the briefcase.
+The power cables are also a standard I established for the breadboard synth
+using 3 pin connectors I found at my local electronics store, and braided wire
+so it doesn’t get tangled.&lt;&#x2F;p&gt;
+&lt;p&gt;In the background there’s an oscilloscope displaying the waveform produced by the oscillator.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;oscillator-wip.jpg&quot; alt=&quot;A pair of circuit boards connected by a DIY power cable with an oscillator in the background displaying a sawtooth wave&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;For the module front panels I went with some clear acrylic I found at a
+recycling store. It came in a strip whose width was slightly less than half the depth of
+the briefcase, so I could make each front panel with a single cut.
+I cut the acrylic with a hacksaw. Some of my cuts aren’t perfectly straight.&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s the oscillator with its front panel attached.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;oscillator-done.jpg&quot; alt=&quot;A synth module with a clear acrylic front panel and circuit attached with a spacer&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I made several trips to the hardware store to buy the different sized drill bits I needed.
+Jack sockets, knobs, switches, and screws all need different hole sizes.&lt;&#x2F;p&gt;
+&lt;p&gt;I iterated on ways to safely drill the holes without shattering the panel.
+Originally I would start by drilling the corner screw holes, and using them to fasten the
+panel to a block of sacrificial wood. This holds the panel in place while I drill the other
+larger holes. To drill a larger hole, start by drilling a small hole and then use
+several different drill bits to gradually widen it. Unfortunately this approach led to
+several shattered front panels. When using a large drill bit, right after the bit
+penetrates through the panel and starts drilling into the wood, the panel would sometimes be
+violently pulled away from the wood, up the drill bit, occasionally causing it to shatter.&lt;&#x2F;p&gt;
+&lt;p&gt;Eventually what I found to work was drilling the corner holes first as before, but then using them to bolt
+the panel to the &lt;em&gt;frame&lt;&#x2F;em&gt; inside the briefcase before drilling the remaining holes.&lt;&#x2F;p&gt;
+&lt;p&gt;Here are the first three modules I completed attached to the frame. There’s a power supply,
+oscillator, and a mixer. The mixer has a headphone jack allowing speakers to be plugged in.
+Modules connect to each other using banana jacks. Banana jacks are stackable, so a single
+socket can be attached to multiple other sockets. These cables only have a single wire in them,
+but modules all share the same ground reference through the power supply.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;front-panels.jpg&quot; alt=&quot;Three modules attached to the frame with some banana cables attached&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s a closeup of the internals of a module. You can see the spacers that attach the front panel
+to the circuit board, and a cable management system I devised for the wires going from the front panel to the circuit.
+Start by drilling a few holes in the circuit board and thread all the wires through them.
+Hot glue a safety pin to the base of the front panel. The pin will be used to hold all the wires
+in place, and it can be opened to allow new wires to be added.
+Good cable management allows you to connect the front panel and board with long enough wires that the module can be “unfolded” to access the underside
+of the front panel, without the long wires getting tangled.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;module.jpg&quot; alt=&quot;The internals of a synth module&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;And here’s the underside of the circuit board showing the cable management hole and my dodgy soldering.
+I made all the modules on stripboard. I took this photo during a troubleshooting session
+where I’d de-soldered and re-soldered some components leading to the burnt traces.
+When attaching ICs to stripboard it’s necessary to cut the traces between their pins.
+I drilled through the copper strip trying to not also drill all the way through the board.
+Also make sure to use a non-conductive washer when attaching bolts to stripboard so the
+head of the bolt doesn’t short out the traces.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;underside.jpg&quot; alt=&quot;The underside of the circuit board showing copper strips with solder&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I spent several months making modules. Eventually I made a MIDI to analog voltage converter
+allowing the synth to be controlled by MIDI keyboard.
+It’s the takeaway container in the image below.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;midi-to-cv.jpg&quot; alt=&quot;A takeaway container with some cables coming out connecting a MIDI host to the briefcase synth&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;One problem I encountered was that modules needed to be bolted onto the metal beams
+in the case, but this required reaching under the beam to hold the nut while fastening
+the bolt. It’s only possible to reach the nuts of modules with empty space next to them
+meaning that only the outer-most modules could ever be removed.&lt;&#x2F;p&gt;
+&lt;p&gt;To fix this I replaced all the bolts with Command picture-hanging strips, which are
+kind of like Velcro but they seem to hold tighter and don’t wiggle at all. I initially
+tried Velcro but found the picture-hanging strips worked better.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;command-strips.jpg&quot; alt=&quot;Picture-hanging strips replace the bolts attaching the modules to the frame&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s a jam session I recorded with the synth:&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;D77Rjtgv7kU?si=HhDTdoqaq3FOZCo6&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;p&gt;And here’s a live performance I did with the synth at an electronic music open mic:&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;dpt2oC0l_L0?si=tRvhVP0XQQeGMF8n&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+</description>
+      </item>
+      <item>
+          <title>CAW (part 1): A Rust library for making Synthesizers</title>
+          <pubDate>Wed, 07 Jan 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/">&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;caw&quot;&gt;CAW&lt;&#x2F;a&gt; started out as a rewrite of &lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;llama&#x2F;&quot;&gt;Llama&lt;&#x2F;a&gt; into Rust.
+It’s a software-defined modular synthesizer - a library that can be used to create synthesizers by declaratively
+describing a graph of interconnected modules. I rewrote Llama in Rust because I was frustrated with the state
+of OCaml development tooling (read more about this &lt;a href=&quot;https:&#x2F;&#x2F;www.gridbugs.org&#x2F;frustrating-interactions-with-the-ocaml-ecosystem-while-developing-a-synthesizer-library&#x2F;&quot;&gt;here&lt;&#x2F;a&gt;).
+This post covers the state of CAW as of around the end of 2024 when I rewrote it
+pretty much from scratch with an eye for performance.
+I’ll cover the basic concepts in this post, as well as some considerations in
+switching from OCaml to Rust, and in &lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-2&#x2F;&quot;&gt;Part 2&lt;&#x2F;a&gt; I’ll focus on what I’ve changed and
+added since then.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-1&#x2F;caw.jpg&quot; alt=&quot;The CAW logo - a crow playing a keytar&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;As with Llama, the core concept is signals - streams of values where elements are produced at the
+sound card’s sample rate (usually about 44kHz). In CAW the main type is &lt;code&gt;Signal&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; representing a stream
+of some type &lt;code&gt;T&lt;&#x2F;code&gt;. Here’s an example showcasing the main differences between doing this in OCaml and Rust.
+I’ll show the code for a simple synthesizer implemented with Llama and CAW, then discuss the differences.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ocaml&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-ocaml &quot;&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span&gt;open &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Llama
+&lt;&#x2F;span&gt;&lt;span&gt;open &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Dsl
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span&gt;=
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;osc &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; oscillator (const Saw) (const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;gate &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; periodic_gate &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~frequency_hz:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;5.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~duty_01:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.05&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;env &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; ar_linear &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~gate ~attack_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~release_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.15&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;=
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    osc &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; butterworth_low_pass_filter &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~cutoff_hz:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(env &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; scale &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;20000.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;output &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;*.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;. env &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  play_signal output
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;use &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;caw::prelude::&lt;&#x2F;span&gt;&lt;span&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() -&amp;gt; anyhow::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Result&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;()&amp;gt; {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;oscillator_hz&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(Waveform::Saw, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; gate &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;periodic_gate_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;duty_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.05&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; env &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;adsr_linear_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;gate).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;attack_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;release_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.15&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;=
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;        osc.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;low_pass_butterworth&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(env.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;20_000.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;());
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; output &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; env;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    SignalPlayer::new()&lt;&#x2F;span&gt;&lt;span&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;play_sample_forever&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(output)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Both of these programs play a 100Hz sawtooth wave modulated by an envelope that
+controls both the volume and filter cutoff.&lt;&#x2F;p&gt;
+&lt;p&gt;A major difference is that in Rust there are no named function parameters.
+If the inputs to modules were passed as regular function arguments then it will
+be difficult to tell the meaning of each argument at a glance.
+To work around this, in CAW modules are created using the “builder pattern”.
+If there are mandatory arguments whose meaning is obvious without a label then
+they are passed as regular (anonymous) arguments to the “constructor” (functions
+like &lt;code&gt;oscillator_hz&lt;&#x2F;code&gt; and &lt;code&gt;low_pass_butterworth&lt;&#x2F;code&gt;) which creates a builder for the
+respective module type. Then methods can be chained onto the builder which
+override default values for any other module parameters. Finally the &lt;code&gt;.build()&lt;&#x2F;code&gt; method
+actually creates the module.&lt;&#x2F;p&gt;
+&lt;p&gt;An alternative to the builder pattern might be to use structs of arguments.
+In Rust a struct literal is written with named fields, and if the struct
+implements the &lt;code&gt;Default&lt;&#x2F;code&gt; trait then it’s quite ergonomic to omit fields and use
+their default values.
+Had I gone down this route, the
+&lt;code&gt;adsr_linear_01&lt;&#x2F;code&gt; module could be created like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;AdsrLinear01Args {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    gate,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    attack_s: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    release_s: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.15&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span&gt;..&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Default&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;::default(),
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I opted to not use this approach because it felt was less
+ergonomic. Code formatters would tend to split definitions over multiple
+lines rather than putting definitions all on a single line as with (at least
+short) chains of methods when using the builder pattern.
+It also requires that the struct implements &lt;code&gt;Default&lt;&#x2F;code&gt; which might not make
+sense. The builder pattern allows modules to have both mandatory and optional
+fields.&lt;&#x2F;p&gt;
+&lt;p&gt;Another big difference is that in Llama, when passing a constant value to a
+function which expects a signal, the &lt;code&gt;const&lt;&#x2F;code&gt; function must be used to produce a
+signal which always yields a given value. This is not necessary in CAW.
+To understand, let’s take a look at the types of the
+&lt;code&gt;periodic_gate&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;periodic_gate_hz&lt;&#x2F;code&gt; functions.&lt;&#x2F;p&gt;
+&lt;p&gt;In Llama its type is:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ocaml&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-ocaml &quot;&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span style=&quot;background-color:#171717;color:#616161;&quot;&gt;(* The [&amp;#39;a t] type constructor represents signals yielding values of type &amp;#39;a. *)&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;val &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;periodic_gate : &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;frequency_hz&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;duty_01&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Gate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;.t
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In CAW its type is:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;periodic_gate_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;freq_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Into&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;Signal&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;f64&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; PeriodicGateBuilder
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;CAW uses the &lt;code&gt;Into&lt;&#x2F;code&gt; trait to allow functions to take values of any type which
+can be converted into signals. The &lt;code&gt;f64&lt;&#x2F;code&gt; type implements this trait, converting
+scalar values to constant-valued signals. Similarly in Rust the arithmetic operators can
+be overloaded to allow signals to be multiplied by other signals or by scalars as in &lt;code&gt;osc_filtered * env&lt;&#x2F;code&gt; and &lt;code&gt;env.clone() * 20_000.0&lt;&#x2F;code&gt;.
+In Llama I needed to define a new operator &lt;code&gt;*..&lt;&#x2F;code&gt; for multiplying signals with other
+signals, and the helper function &lt;code&gt;scale&lt;&#x2F;code&gt; multiplies a signal with a scalar.&lt;&#x2F;p&gt;
+&lt;p&gt;Rust lacks a pipeline operator like OCaml’s “&lt;code&gt;|&amp;gt;&lt;&#x2F;code&gt;”, however code that would be
+written as pipelines in OCaml translate naturally into chains of method.
+I wanted to avoid making every module a method of &lt;code&gt;Signal&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; so
+I introduced the concept of a &lt;code&gt;Filter&lt;&#x2F;code&gt;, which is a trait defined like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;trait &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Filter {
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;type &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Input;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;type &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Output;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;run&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;input&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;Self::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Input, &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;ctx&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;SignalCtx) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;Self::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;Output;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;Input&lt;&#x2F;code&gt; and &lt;code&gt;Output&lt;&#x2F;code&gt; types are usually &lt;code&gt;Signal&amp;lt;f64&amp;gt;&lt;&#x2F;code&gt;.
+This trait is a little too generic in hindsight, and is refined in more recent
+versions of CAW.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;filter&lt;&#x2F;code&gt; method in the example above takes an implementation of &lt;code&gt;Filter&lt;&#x2F;code&gt;
+and applies it to &lt;code&gt;self&lt;&#x2F;code&gt;. It’s common to chain successive calls of &lt;code&gt;filter&lt;&#x2F;code&gt; to
+apply a sequence of filters to a signal.&lt;&#x2F;p&gt;
+&lt;p&gt;Since CAW is written in Rust we have to think a bit about memory. Note how the
+CAW example calls the &lt;code&gt;.clone()&lt;&#x2F;code&gt; method on the envelope. Here’s the relevant
+parts of the code again:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ocaml&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-ocaml &quot;&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;env &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; ar_linear &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~gate ~attack_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~release_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.15&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;=
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  osc &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; butterworth_low_pass_filter &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~cutoff_hz:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(env &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; scale &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;20000.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span&gt;let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;output &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;*.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;. env &lt;&#x2F;span&gt;&lt;span&gt;in
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;...
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; env &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;adsr_linear_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span&gt;&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;gate).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;attack_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;release_s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.15&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;=
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    osc.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;low_pass_butterworth&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(env.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;20_000.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;());
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; output &lt;&#x2F;span&gt;&lt;span&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; osc_filtered &lt;&#x2F;span&gt;&lt;span&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; env;
+&lt;&#x2F;span&gt;&lt;span&gt;...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If the Rust example above were changed to do &lt;code&gt;env * 20_000.0&lt;&#x2F;code&gt; instead of cloning
+then the &lt;code&gt;env&lt;&#x2F;code&gt; variable would be consumed by that multiplication, and wouldn’t be
+available the next time it’s needed by the &lt;code&gt;osc_filtered * env&lt;&#x2F;code&gt; on the following
+line.&lt;&#x2F;p&gt;
+&lt;p&gt;This highlights a design consideration when building Llama as well as CAW, which
+is how to handle the situation where the output of one module is used as the
+input to multiple other modules. In the analog world, depending what type of
+cables you use you might be able to plug multiple cables into each other to
+easily split or join a signal.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-1&#x2F;stacked-banana-jacks.jpg&quot; alt=&quot;An analog synthesizer module with a stack of multiple cable terminators plugged into the same jack socket.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Llama and CAW both evaluate modules “top-down”. When evaluating an operation
+like &lt;code&gt;osc_filtered * env&lt;&#x2F;code&gt; during each audio sample, first a sample will be
+produced from &lt;code&gt;osc_filtered&lt;&#x2F;code&gt;, then a sample will be produced from &lt;code&gt;env&lt;&#x2F;code&gt;, then
+those samples will be multiplied. Evaluating &lt;code&gt;osc_filtered&lt;&#x2F;code&gt; means computing the
+output of the low-pass filter, which in turn needs to compute the output of the
+oscillator and so on. Top-down evaluation can be thought of as the sample values
+being &lt;em&gt;pulled&lt;&#x2F;em&gt; out of modules which can then pull values out of other modules
+and so on. This is distinct from a bottom-up evaluation where values are
+&lt;em&gt;pushed&lt;&#x2F;em&gt; from the most simple modules in the signal graph through more complex
+values.&lt;&#x2F;p&gt;
+&lt;p&gt;The envelope generator &lt;code&gt;env&lt;&#x2F;code&gt; is evaluated twice in the example. We really want both evaluations
+to result in the same value each sample, and we don’t want to have to repeat the work of
+recomputing its value if it’s already been computed once during the current
+sample. For this reason, each signal internally includes a cache of the sample
+value computed for that signal during the current sample. In CAW when you
+&lt;code&gt;.clone()&lt;&#x2F;code&gt; a signal you get a shallow copy that shares its cache with any other
+copies.&lt;&#x2F;p&gt;
+&lt;p&gt;Computing the value yielded by a signal might modify the signal’s internal
+state. Since signals are shared when they are cloned, this means we need a
+shared mutable value. In Rust this requires wrapping signals in something like
+&lt;code&gt;Rc&amp;lt;RefCell&amp;lt;...&amp;gt;&amp;gt;&lt;&#x2F;code&gt; and calling &lt;code&gt;.borrow_mut()&lt;&#x2F;code&gt; before mutating.
+This is all handled internally by the &lt;code&gt;Signal&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; type, so it doesn’t leak into
+synthesizer code. Still
+doing this felt a little ugly and removed the ability of the compiler to
+optimize in some cases but it seemed essential for ergonomics. Eventually I
+found a way to have my cake and eat it too, which will be covered in part 2.&lt;&#x2F;p&gt;
+&lt;p&gt;That’s all for part 1. It didn’t take long to reach feature parity with Llama
+since all the complex logic was already implemented. I went a bit further,
+adding browser support and a couple of other modules such as reverb, a bit
+crusher, and synthesized drums.&lt;&#x2F;p&gt;
+&lt;p&gt;CAW is easy to include in other Rust projects. Here
+are some of my projects that use CAW:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;generative-music-experiment&#x2F;&quot;&gt;Generative Music
+Experiment&lt;&#x2F;a&gt;,
+plays random notes while maintaining a musical context so the music
+feels like it’s in a particular key and mode.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.itch.io&#x2F;electric-organ&quot;&gt;Electric Organ&lt;&#x2F;a&gt; is a roguelike I
+made for a game jam where the music is procedurally generated along with game
+content.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Read more in &lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-2&#x2F;&quot;&gt;CAW Part 2&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>Breadboard Synth</title>
+          <pubDate>Tue, 06 Jan 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/">&lt;p&gt;In late 2023 I had a reasonable understanding of the basic circuits for a handful of
+synth modules but still had too many questions to confidently start building anything,
+and by sheer luck Look Mum No Computer uploaded &lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;GsTGu2V7tcU&quot;&gt;this video&lt;&#x2F;a&gt;
+building an entire synthesizer voice from scratch on breadboards. I followed along.&lt;&#x2F;p&gt;
+&lt;p&gt;Step one was getting the oscillator working on a breadboard.
+I used a AS3340 oscillator on-a-chip, which is a clone of the legendary CEM3340.
+All I was trying to do was add the supporting components according to the AS3340
+manual and connect it to power, but still it took several weekends to make it work.
+The problems were components not making good contact with the
+breadboard, and the AS3340 chip being faulty, probably because I broke it without realizing.
+Fortunately I had spares.&lt;&#x2F;p&gt;
+&lt;p&gt;Eventually my oscilloscope confirmed that my oscillator was working:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;breadboard-synth&#x2F;oscillator.jpg&quot; alt=&quot;An oscilloscope connected to a breadboard circuit. The screen of the oscilloscope shows a triangle wave and sawtooth wave. Some knobs are taped to a sheet of cardboard and wired into the breadboard. An additional circuit with a red and blue LED is attached to the breadboard with a cable.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;In the image above, the oscillator is implemented on the breadboard.
+There are a pair of knobs on the right that control the pitch of the oscillator - one is for coarse control
+and the other for fine control. The fine pitch control would usually be done with a smaller trim pot
+but I didn’t have any at the time. Turning either knob would change the frequency of the signal plotted by the
+oscilloscope.&lt;&#x2F;p&gt;
+&lt;p&gt;The circuit-board at the top right with the red and blue LEDs is the power supply.
+Almost every synthesizer circuit I came across requires a positive and &lt;em&gt;negative&lt;&#x2F;em&gt; DC power input (as well as ground).
+Information on how to make a negative voltage was a bit hard to find.
+The first technique I learnt about is called a &lt;em&gt;charge pump&lt;&#x2F;em&gt;, which produces an output DC voltage
+out of a possibly different input DC voltage using a timer (like a 555 timer) to repeatedly charge and discharge a capacitor.
+The output voltage can be negative.&lt;&#x2F;p&gt;
+&lt;p&gt;The power supply plugs into a 12v DC wall wart. It forwards the +12v and ground inputs directly to its output,
+and uses a charge pump to create the additional -12v output. This worked fine for oscillator as it didn’t
+draw a lot of current, however as the synth got more complicated and power hungry my little power supply couldn’t
+keep up.&lt;&#x2F;p&gt;
+&lt;p&gt;Eventually I found a much simpler technique for making a negative voltage where you take an &lt;em&gt;AC&lt;&#x2F;em&gt; input (not straight from mains! - the one here uses a 12v AC wall wart) and
+separate it into its positive and negative components. The positive and negative components of the input
+are used to charge some (big!) capacitors that discharge through the power supply’s output.
+I first learnt about this approach &lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;pQKN30Mzi2g&quot;&gt;here&lt;&#x2F;a&gt;.
+I built a new power supply which had no trouble powering the entire breadboard synth and I’ve used the same technique in all my later analog synths.&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s my second power supply. Look at those capacitors!
+I was a bit nervous the first time I turned it on…&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;breadboard-synth&#x2F;power-supply.jpg&quot; alt=&quot;A home-made power supply on strip board&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The red and blue LEDs indicate that the positive and negative voltage outputs are working.
+In addition to being pretty they’re a safety feature.
+If either LED is off while the device is powered on it suggests one of the synth modules has shorted out so you can quickly turn off the power and investigate.
+Also these big capacitors can store a lot of energy, and they continue to store it long after the power has been turned off, so it’s possible to get shocked while working on the power supply even if it’s not plugged in.
+The LEDs are a constant small load on the power supply which lets the capacitors discharge over several seconds after turning off
+the device, and you can use the fact that the LEDs are off to tell that it’s safe to lick I mean touch.&lt;&#x2F;p&gt;
+&lt;p&gt;And here’s the full breadboard synthesizer:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;breadboard-synth&#x2F;breadboard-synth.jpg&quot; alt=&quot;5 breadboards all connected together. The bottom two are populated with 16 knobs in a row while the rest have various circuitry. Many knobs are attached to a cardboard sheet, all wired into the breadboards. The power supply is connected to the breadboards.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The two breadboards in the centre contain the synth voice like the one from the LMNC video.
+There’s a pair of oscillators that can modulate each other’s pitch, a low-pass filter, and an envelope generator. The additional breadboards
+are a 16-step sequencer. An Arduino controls the timing and note duration and uses a decoder to select one
+of the 16 knobs at a time from the bottom two breadboards. The position of each of those 16 knobs determines the pitch of
+one of the 16 notes in the sequence.&lt;&#x2F;p&gt;
+&lt;p&gt;Too see the breadboard synth in action at various stages of completion, check out &lt;a href=&quot;https:&#x2F;&#x2F;youtube.com&#x2F;playlist?list=PLggSMLJ5AJ0lLp-nO7WwMEh1cL222ic6l&quot;&gt;this youtube playlist&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>Llama - A Programmable Modular Synth in OCaml</title>
+          <pubDate>Fri, 02 Jan 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/llama/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/llama/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/llama/">&lt;p&gt;Building analog synthesizers was slow going at the start.
+I had lots of questions, and when I found answers they often led to more questions.
+What type of cables should I use, what voltage should the power supply be,
+what’s the diameter of the holes I need to drill to attach knobs, buttons, jack sockets, etc?
+What material should the front panel be made of and how do I cut it to size? What size should it even be?
+Most synth circuits require a negative voltage but how do I produce one?&lt;&#x2F;p&gt;
+&lt;p&gt;In the midst of this I was traveling to France for work (I’m a programmer) and on the flight
+I had the idea that a synthesizer module like an oscillator or filter with input jacks and output jacks
+can be thought of as a function. It takes some inputs (signals from other module, knob positions, etc)
+and produces some outputs which can then be passed to other functions, and so on.
+Just like the mess of cables patching together the modules of a modular synhesizer.&lt;&#x2F;p&gt;
+&lt;p&gt;Eventually I’d end up with a library for building highly customizable MIDI-controlled programmable synthesizers
+like the one used in the workflow pictured below (a screenshot from &lt;a href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=bkKAFVH8G8g&quot;&gt;this video&lt;&#x2F;a&gt;).
+&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;llama&#x2F;live.png&quot; alt=&quot;3 windows. A terminal with a command to start the synth, a visualization of the synth’s output, and a webcam shot of me playing a midi keyboard.&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I started hacking on a &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;synth-experiment-rust&quot;&gt;prototype&lt;&#x2F;a&gt; in Rust because
+the Rust library &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;RustAudio&#x2F;cpal&quot;&gt;cpal&lt;&#x2F;a&gt; makes it very easy to play sound programatically.
+Then I caught covid and spent the next few weeks isolating and recovering.
+Lots of time lying in bed in a hotel room in a very inconvenient timezone for talking to people back home.
+I spent most of that time developing my prototype.&lt;&#x2F;p&gt;
+&lt;p&gt;The core idea is &lt;em&gt;signals of values&lt;&#x2F;em&gt;, which are streams of values produced at
+the sample rate of the computer’s sound card (probably about 44kHz).
+A signal of &lt;code&gt;float&lt;&#x2F;code&gt;s would be suitable for representing an audio signal, but
+you can also have signals of &lt;code&gt;bool&lt;&#x2F;code&gt;s to represent the state of a button or key.
+Synth modules are functions that take signals and produce new signals in return.
+This way modules can be composed to produce arbitrarily complex “patches”, just
+like in an analog modular synth. I refer to this approach as a &lt;em&gt;software-defined modular synthesizer&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For example here’s the signature of the envelope generator. &lt;code&gt;Sf64&lt;&#x2F;code&gt; is a signal of &lt;code&gt;float&lt;&#x2F;code&gt;s and &lt;code&gt;Sbool&lt;&#x2F;code&gt; is a
+signal of &lt;code&gt;bool&lt;&#x2F;code&gt;s.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;adsr_envelope_lin_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;gate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: Sbool,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;attack_seconds&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: Sf64,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;decay_seconds&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: Sf64,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;sustain_01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: Sf64,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;release_seconds&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: Sf64,
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) -&amp;gt; Sf64
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;All the arguments to this function are signals which allows the properties of
+the envelope to be changed in real-time. If you want a fixed value, there’s a function
+that takes a single value and makes a signal that always has that value:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span&gt;const_&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;lt;T: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8aa6c1;&quot;&gt;Clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;&amp;gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;value&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;: T) -&amp;gt; BufferedSignal&amp;lt;T&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The hardest part was figuring out how to implement digital filters.
+The most obvious implementation of a low-pass filter to me (take the average of the previous K samples)
+doesn’t sound very good, so I went looking for alternatives.
+What I found was a lot of maths that I barely understood, and not really geared towards
+a real-world implementation. I didn’t want to get sidetracked by a DSP rabbit hole just yet.
+Fortunately I came across &lt;a href=&quot;https:&#x2F;&#x2F;exstrom.com&#x2F;journal&#x2F;sigproc&#x2F;dsigproc.html&quot;&gt;this&lt;&#x2F;a&gt; reference implementation
+of a couple of well-known filters, which I re-implemented in Rust.&lt;&#x2F;p&gt;
+&lt;p&gt;The prototype still works on macOS, but due to some SDL-related bitrotting it doesn’t work
+on Linux anymore. Use the computer keyboard to play
+notes and use the mouse to control the filter. The code is &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;synth-experiment-rust&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s a screenshot.
+It’s pixelated because it renders with my &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;chargrid&quot;&gt;roguelike ascii graphics
+library&lt;&#x2F;a&gt; because that was the easiest way
+I knew how to render to the screen in Rust (ie. the “pixels” are actually spaces).&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;llama&#x2F;prototype.png&quot; alt=&quot;An oscilloscope visualization of a sound wave in a window&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;My company has a policy where we can use the last two days of each month to work on personal projects
+&lt;em&gt;as long as they are written in OCaml&lt;&#x2F;em&gt; (we make OCaml development tools).
+I used two of these days to port my prototype to OCaml, and then took it further adding MIDI (devices and files).
+This was the beginning of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;llama&quot;&gt;Llama&lt;&#x2F;a&gt; - a
+software-defined modular synthesizer in OCaml.&lt;&#x2F;p&gt;
+&lt;p&gt;For comparison with the Rust envelope generator above, here’s how it looks in Llama. The &lt;code&gt;&#x27;a t&lt;&#x2F;code&gt; type
+represents a signals whose values are of type &lt;code&gt;&#x27;a&lt;&#x2F;code&gt;, and the &lt;code&gt;Gate.t&lt;&#x2F;code&gt; type is an  for &lt;code&gt;bool t&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ocaml&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-ocaml &quot;&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span&gt;val &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;adsr_linear :
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;gate&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;Gate&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;attack_s&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;decay_s&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;sustain_01&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;release_s&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#8aa6c1;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t &lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;-&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;float t
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This uses one of my favourite features of OCaml: named function arguments. When calling &lt;code&gt;adsr_linear&lt;&#x2F;code&gt;,
+each argument must be passed by name, as in the following example. Variables named the same as arguments
+can be &lt;em&gt;punned&lt;&#x2F;em&gt; (e.g. &lt;code&gt;~gate:gate&lt;&#x2F;code&gt; can be written as simply &lt;code&gt;~gate&lt;&#x2F;code&gt;):&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ocaml&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-ocaml &quot;&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;adsr_linear &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~gate ~attack_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.01&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~decay_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.4&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~sustain_01:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;1.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~release_s
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It’s typical for modules to have many input signals, and if they’re just passed as regular arguments then it
+can be hard to quickly tell the meaning of each input. Most languages lack a mechanism for named arguments,
+so this is a situation where OCaml really shines.&lt;&#x2F;p&gt;
+&lt;p&gt;Another OCaml feature that’s a good fit for this style of programming is the pipeline operator &lt;code&gt;|&amp;gt;&lt;&#x2F;code&gt;, which is
+an infix operator that passes the value on its left to the function on its right. This allows a sequence of
+transformations to be written from left to right, like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;ocaml&quot; style=&quot;background-color:#191919;color:#ffffff;&quot; class=&quot;language-ocaml &quot;&gt;&lt;code class=&quot;language-ocaml&quot; data-lang=&quot;ocaml&quot;&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;mk_voices input.keyboard
+&lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; chebyshev_low_pass_filter
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~cutoff_hz:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(mouse_x &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; exp_01 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;4.0 &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; scale &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;8000.0 &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; offset &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;100.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~resonance:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(mouse_y &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; exp_01 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;1.0 &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; scale &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;10.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~f:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(signal &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; scale &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.6&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~delay_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~f:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(signal &lt;&#x2F;span&gt;&lt;span&gt;|&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt; scale &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.6&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#80d500;&quot;&gt;~delay_s:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;(const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#eddd5a;&quot;&gt;0.5&lt;&#x2F;span&gt;&lt;span style=&quot;color:#cccccc;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;mk_voices&lt;&#x2F;code&gt; function takes a handle to the (computer) keyboard and returns an audio
+signal from a keyboard-controlled synth voice. The code above applies several
+effects: a low-pass filter with the cutoff and resonance controlled by the
+mouse position, and then a pair of echo effects that add a time-delayed copy of
+the signal to itself. It’s very natural to write synth code like this when you have
+a chain of modules with one interesting input and output. You can think of
+plugging the output of one module into the input of the next one in the chain.&lt;&#x2F;p&gt;
+&lt;p&gt;I added a graphical window for visualization, and to allow keyboard and mouse input to control the synth.
+Here’s an early screenshot. This time it’s pixelated because the number of audio samples per frame is less than
+the width of the window, and I was too lazy to maintain a buffer of old samples for the purpose of visualization.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;llama&#x2F;screenshot.png&quot; alt=&quot;A purple oscilloscope visualization of a sound wave in a window&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;To play generated audio samples in real time, Llama originally used the Rust library &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;RustAudio&#x2F;cpal&quot;&gt;cpal&lt;&#x2F;a&gt;
+by way of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;zshipko&#x2F;ocaml-rs&quot;&gt;ocaml-rs&lt;&#x2F;a&gt; which allows for OCaml interoperability with Rust.
+I’ve since switch to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;xiph&#x2F;libao&quot;&gt;libao&lt;&#x2F;a&gt; to simplify the build process to not involve Rust.&lt;&#x2F;p&gt;
+&lt;p&gt;As I developed Llama further I started to get frustrated with OCaml’s tooling ecosystem.
+It seemed like nothing worked the way I’d expect it to, and I was always getting nasty surprises.
+I’ve written about all the problems I ran into &lt;a href=&quot;https:&#x2F;&#x2F;www.gridbugs.org&#x2F;frustrating-interactions-with-the-ocaml-ecosystem-while-developing-a-synthesizer-library&#x2F;&quot;&gt;over on my other blog&lt;&#x2F;a&gt;.
+I stopped working on Llama and migrated the ideas to a new project in Rust that would eventually become &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;caw&quot;&gt;CAW&lt;&#x2F;a&gt;,
+but more on that in a later post.&lt;&#x2F;p&gt;
+&lt;p&gt;Llama still works, and it is lots of fun to play around with.
+&lt;a href=&quot;https:&#x2F;&#x2F;www.gridbugs.org&#x2F;sound-on-ocaml-on-windows&#x2F;&quot;&gt;It even sort of works on Windows&lt;&#x2F;a&gt; which is no easy feat for an OCaml program.
+There are a bunch of example programs in the &lt;code&gt;examples&lt;&#x2F;code&gt; folder.
+Some of the examples are &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;llama?tab=readme-ov-file#llama-in-action&quot;&gt;recorded&lt;&#x2F;a&gt;.
+My favourites are probably &lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;1ndhPlvDBH8&quot;&gt;this&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;o-XPH1j0NqE&quot;&gt;this&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I also did a couple of live jams using Llama’s support for live MIDI input which I’ve put on youtube &lt;a href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=bkKAFVH8G8g&quot;&gt;here&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=vvgth-ZZq_8&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</description>
+      </item>
+      <item>
+          <title>NES Audio Playground</title>
+          <pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate>
+          <author>Stephen Sherratt</author>
+          <link>https://gridbugs.github.io/purpleearthhypothesis.com/nes-audio-playground/</link>
+          <guid>https://gridbugs.github.io/purpleearthhypothesis.com/nes-audio-playground/</guid>
+          <description xml:base="https://gridbugs.github.io/purpleearthhypothesis.com/nes-audio-playground/">&lt;p&gt;Starting out the year with a series of posts about my past synth projects.&lt;&#x2F;p&gt;
+&lt;p&gt;My obsession with synthesizers grew out of an interest in emulating old game consoles.
+I made an &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;mos6502&quot;&gt;emulator&lt;&#x2F;a&gt; for the Nintendo Entertainment System
+as my first project back in 2019, but I never bothered to emulate the sound chip.
+A couple of years ago I decided to have a go at adding sound to my emulator, and not knowing much about audio
+the first thing I did was write some test programs for the NES to play sound on other people’s emulators.&lt;&#x2F;p&gt;
+&lt;p&gt;This post is about the last such program I wrote - a musical instrument in its own right -
+which indirectly started the side quest which quickly became my main quest: DIY synthesizers.&lt;&#x2F;p&gt;
+&lt;p&gt;I never did get around to adding sound to my emulator.&lt;&#x2F;p&gt;
+&lt;p&gt;The NES audio output is a mix of five instruments: a pair of pulse (square) waves, a triangle wave, a noise generator,
+and the DMC which allows playing audio samples (though the limited memory of the NES means
+the samples tend to be quite short).&lt;&#x2F;p&gt;
+&lt;p&gt;The NES sound chip (or APU) is controlled with 20 memory-mapped 8-bit registers.
+My audio playground is intended as a tool for getting familiar with the function of
+each bit of each register by showing each one on the screen and letting you use a game
+controller to flip them between 0 and 1.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;nes-audio-playground&#x2F;screenshot.png&quot; alt=&quot;NES emulator running the playground, with all of the APU registers listed&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The playground’s UI lists each bit of each register, with registers organized by instrument.
+Light bits are set to 1 and dark bits are set to 0.
+Bits are represented by a letter intended to serve as a mnemonic for the bits
+function, and bits represented by dashes have no function.
+Use the direction buttons to move the cursor and press A to flip the bit under the cursor.
+You can “buffer” changes to bits by holding down the B button while flipping bits with A,
+and when you release B all the changes are applied at once.&lt;&#x2F;p&gt;
+&lt;p&gt;This is based on a video I saw of a similar tool called &lt;a href=&quot;https:&#x2F;&#x2F;ploguechipsounds.blogspot.com&#x2F;2014&#x2F;09&#x2F;plogue-livenes.html&quot;&gt;livenes&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;nes-audio-playground&#x2F;nes-audio-playground.nes&quot;&gt;Here’s a link to download the ROM file for my audio playground.&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;While thinking about how to make it easier to perform real music with a tool like this
+I came across &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Music_tracker&quot;&gt;trackers&lt;&#x2F;a&gt;,
+which then led me to &lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;5qE-WJzdd6k&quot;&gt;this video by Look Mum No Computer&lt;&#x2F;a&gt;
+about using a tracker to play music on a NES.
+Then I watched all his other videos and now I make synthesizers as a hobby.&lt;&#x2F;p&gt;
+&lt;p&gt;Further reading:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;Y-y84Th9_-Q&quot;&gt;Short jam on the NES audio playground&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;gridbugs&#x2F;nes-audio-playground&quot;&gt;The project on github&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;hs-MrEoOX5Y&quot;&gt;My talk at Sydney Rust meetup about developing this project&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.gridbugs.org&#x2F;playing-sound-on-the-nes-by-directly-setting-its-dmc-output&#x2F;&quot;&gt;Post on my other blog about playing audio on the NES&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.nesdev.org&#x2F;wiki&#x2F;APU&quot;&gt;NES sound chip documentation&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</description>
+      </item>
+    </channel>
+</rss>

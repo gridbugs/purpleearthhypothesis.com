@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="Purple Earth Hypothesis">
+    <meta property="og:type" content="website">
+    <meta name="color-scheme" content="dark">
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+      <meta property="og:type" content="article">
+      <meta property="og:title" content="
+CAW (part 2): Optimizing CAW
+">
+      <link rel="canonical" href="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/">
+      <meta property="og:url" content="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/">
+
+      
+        <meta name="description" content="Optimizing my Rust synthesizer library">
+        <meta property="og:description" content="Optimizing my Rust synthesizer library">
+      
+
+      
+        <meta property="article:published_time" content="2026-02-03T00:00:00+00:00">
+      
+      
+        <meta property="og:image" content="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/stacked-banana-jacks.jpg">
+      
+    
+
+    <meta property="og:image" content="https://gridbugs.github.io/purpleearthhypothesis.com/ibis.png">
+
+
+    <link rel="icon" type="image/x-icon" href="https://gridbugs.github.io/purpleearthhypothesis.com/favicon.png">
+    <link rel="alternate" type="application/rss+xml" title="Purple Earth Hypothesis" href="https://gridbugs.github.io/purpleearthhypothesis.com/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Purple Earth Hypothesis" href="https://gridbugs.github.io/purpleearthhypothesis.com/atom.xml">
+
+    <link rel="stylesheet" href="https://gridbugs.github.io/purpleearthhypothesis.com/style.css">
+    <title>
+CAW (part 2): Optimizing CAW
+</title>
+  </head>
+  <body>
+    <div id="page">
+      <!-- Empty tag so that the normal scroll target has something apply to,
+        even though it has no visible effect. Without this the "ibis" scroll target
+        would always be active. -->
+        <a href="#normal-scroll-target"></a>
+
+        <div id="columns">
+
+          <div id="left"></div>
+
+          <div id="right">
+            <div id="keyboard" class="margin-decoration">
+              <div id="key-24"></div>
+              <div id="key-23-b"></div>
+              <div id="key-22"></div>
+              <div id="key-23-f"></div>
+              <div id="key-21-b"></div>
+              <div id="key-20"></div>
+              <div id="key-21-f"></div>
+              <div id="key-19-b"></div>
+              <div id="key-18"></div>
+              <div id="key-19-f"></div>
+              <div id="key-17"></div>
+              <div id="key-16-b"></div>
+              <div id="key-15"></div>
+              <div id="key-16-f"></div>
+              <div id="key-14-b"></div>
+              <div id="key-13"></div>
+              <div id="key-14-f"></div>
+              <div id="key-12"></div>
+              <div id="key-11-b"></div>
+              <div id="key-10"></div>
+              <div id="key-11-f"></div>
+              <div id="key-9-b"></div>
+              <div id="key-8"></div>
+              <div id="key-9-f"></div>
+              <div id="key-7-b"></div>
+              <div id="key-6"></div>
+              <div id="key-7-f"></div>
+              <div id="key-5"></div>
+              <div id="key-4-b"></div>
+              <div id="key-3"></div>
+              <div id="key-4-f"></div>
+              <div id="key-2-b"></div>
+              <div id="key-1"></div>
+              <div id="key-2-f"></div>
+              <div id="key-0"></div>
+            </div>
+          </div>
+
+          <div id="mid">
+            <div id="content">
+                <header>
+  <div id="header-nav-container">
+    <nav>
+      <ul>
+        <li><a href="https://gridbugs.github.io/purpleearthhypothesis.com">Purple Earth Hypothesis</a></li>
+        <li class="first-rhs"><a href="https://gridbugs.github.io/purpleearthhypothesis.com/about">About</a></li>
+        <li><a href="https://gridbugs.github.io/purpleearthhypothesis.com/blog">Blog</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+                
+
+
+
+
+<article>
+<h1 class="title">CAW (part 2): Optimizing CAW</h1>
+
+  
+<p class="post-meta">
+  <time datetime="2026-02-03T00:00:00+00:00">
+    February 03, 2026
+  </time>
+  
+  in
+  
+  <a href="https://gridbugs.github.io/purpleearthhypothesis.com/tags/project" aria-label="tag">project</a>
+  <a href="https://gridbugs.github.io/purpleearthhypothesis.com/tags/software" aria-label="tag">software</a>
+  
+</p>
+
+
+  
+
+<p><a href="https://github.com/gridbugs/caw">CAW</a> is a Rust library for making synthesizers.
+See <a href="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/">Part 1</a> for the basic idea.</p>
+<p>I started noticing performance limitations where input latency was frustratingly high
+when playing live music with CAW, and complex patches would cause the audio to
+start crackling, indicating the program couldn’t keep up with the sound card’s
+sample rate. I was aware of some design decisions I made for the sake of convenience
+which I expected to have a performance impact. This post is about how I rewrote
+CAW to speed it up.</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/caw.jpg" alt="The CAW logo - a crow playing a keytar" /></p>
+<h2 id="why-was-caw-slow">Why was CAW slow?</h2>
+<p>There were two aspects of CAW’s original design I suspected were slowing it down.
+Firstly there’s the fact that each sample was being fully computed one at a time.
+CAW synthesizers are made by composing modules, and each module typically has some
+input signals, and produce some output signals. For example a low-pass filter takes
+an input audio signal and an input signal controlling the filter cutoff, and produces an
+audio signal which is the input audio with the filter applied.
+Feeding a single sample through all the modules making up the synth, and then feeding the
+next sample and so on meant that CAW probably wasn’t making the most of the CPU’s ability
+to cache recent instructions. CPUs are better at doing a series of tight loops than one
+really big loop. Thus I expected having modules operate on batches of samples
+would yield better performance. This also fit nicely with the interface between CAW
+and the sound driver provided by the Rust library
+<a href="https://crates.io/crates/cpal">cpal</a>, which sends batches of samples to the driver at a
+time.</p>
+<p>The second issue is that each signal was boxed in a <code>Rc&lt;RefCell&lt;_&gt;&gt;</code> which
+was preventing the compiler from making certain optimizations. Also accessing a
+signal to apply its internal logic required performing a check for exclusive
+access to the <code>RefCell&lt;_&gt;</code>, which were guaranteed to always succeed anyway due
+to how signals were implemented, so the checks were just wasting time.</p>
+<p>Also speaking of exclusive access, <code>Rc&lt;RefCell&lt;_&gt;&gt;</code> is not safe to pass between
+threads - something Rust enforces at compile time. This prevented CAW
+synthesizers from being easily parallelized across multiple threads. An alternative
+representation would be <code>Arc&lt;Mutex&lt;_&gt;&gt;</code>, however experimentally introducing
+this type led to a noticeable performance hit for single-threaded synthesizers,
+and still suffered from the other problems caused by boxing signals.</p>
+<h2 id="the-sigt-trait">The <code>SigT</code> trait</h2>
+<p>To unbox signals, I would need to do away with the <code>Signal&lt;T&gt;</code> type, and instead
+represent signals with a <em>trait</em>:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">pub trait </span><span style="color:#cccccc;">SigT {
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">type </span><span style="color:#cccccc;">Item: </span><span style="color:#8aa6c1;">Clone</span><span style="color:#cccccc;">;
+</span><span style="color:#cccccc;">
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">fn </span><span>sample</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="color:#80d500;">mut </span><span style="font-style:italic;color:#8aa6c1;">self</span><span style="color:#cccccc;">, </span><span style="font-style:italic;color:#8aa6c1;">ctx</span><span style="color:#cccccc;">: </span><span>&amp;</span><span style="color:#cccccc;">SigCtx) -&gt; impl Buf&lt;</span><span style="color:#80d500;">Self::</span><span style="color:#cccccc;">Item&gt;;
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>I named this <code>SigT</code> for brevity, as type signatures can get long in Rust.
+A <code>SigT</code> has an associated type <code>Item</code> which is the type of samples produced
+by the signal. This is usually <code>f32</code> for audio signals and <code>bool</code> for gate/trigger signals.
+<code>SigCtx</code> contains information such as how many audio samples the sound driver is
+currently asking for and the audio sample rate. <code>SigT</code>s produce their output by
+returning an <code>impl Buf&lt;Self::Item&gt;</code> - that is, a type-erased implementation of the trait
+<code>Buf&lt;Self::Item&gt;</code>, defined like:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">pub trait </span><span style="color:#cccccc;">Buf&lt;T&gt;
+</span><span style="color:#cccccc;">where
+</span><span style="color:#cccccc;">    T: Clone,
+</span><span style="color:#cccccc;">{
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">fn </span><span>iter</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="font-style:italic;color:#8aa6c1;">self</span><span style="color:#cccccc;">) -&gt; impl </span><span style="color:#8aa6c1;">Iterator</span><span style="color:#cccccc;">&lt;Item = T&gt;;
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">fn </span><span>clone_to_vec</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="font-style:italic;color:#8aa6c1;">self</span><span style="color:#cccccc;">, </span><span style="font-style:italic;color:#8aa6c1;">out</span><span style="color:#cccccc;">: </span><span>&amp;</span><span style="color:#80d500;">mut </span><span style="color:#8aa6c1;">Vec</span><span style="color:#cccccc;">&lt;T&gt;);
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">fn </span><span>clone_to_slice</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="font-style:italic;color:#8aa6c1;">self</span><span style="color:#cccccc;">, </span><span style="font-style:italic;color:#8aa6c1;">stride</span><span style="color:#cccccc;">: </span><span style="color:#80d500;">usize</span><span style="color:#cccccc;">, </span><span style="font-style:italic;color:#8aa6c1;">offset</span><span style="color:#cccccc;">: </span><span style="color:#80d500;">usize</span><span style="color:#cccccc;">, </span><span style="font-style:italic;color:#8aa6c1;">out</span><span style="color:#cccccc;">: </span><span>&amp;</span><span style="color:#80d500;">mut</span><span style="color:#cccccc;"> [T]);
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>So a <code>Buf&lt;T&gt;</code> is something which can be iterated over yielding <code>T</code>s, kind of
+like <code>IntoIterator</code> but more general in that it doesn’t mandate a specific
+iterator type, and more specialized with methods for efficiently copying the data
+to different array types for quickly transferring their contained data to the
+sound driver’s buffer.</p>
+<p>Looking at the type of <code>SigT::sample</code> it might seem like
+it needs to allocate a new buffer every frame, however <code>Buf&lt;T&gt;</code> is implemented for <code>&amp;Vec&lt;T&gt;</code>.
+A <em>reference</em> to a reusable <code>Vec&lt;T&gt;</code> is a <code>Buf&lt;T&gt;</code> which allows modules to contain their own
+output buffers. The <code>sample</code> method usually updates the module’s internal buffer and then just
+returns a reference to the buffer.</p>
+<p>For scalar types like <code>f32</code>, there’s a type <code>ConstBuf&lt;_&gt;</code>:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">pub struct </span><span style="color:#cccccc;">ConstBuf&lt;T&gt; {
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">pub </span><span style="color:#cccccc;">value: T,
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">pub </span><span style="color:#cccccc;">count: </span><span style="color:#80d500;">usize</span><span style="color:#cccccc;">,
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>Its implementation of <code>Buf&lt;T&gt;</code> copies the <code>value</code> field <code>count</code> many times.
+This way there’s no need to allocate a buffer just to store a repeated
+copy of the value of a scalar.</p>
+<p>In addition to the <code>SigT</code> trait there’s also a new type <code>Sig</code> which wraps
+implementations of <code>SigT</code>:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">pub struct </span><span style="color:#cccccc;">Sig&lt;S&gt;(pub S)
+</span><span>where
+</span><span style="color:#cccccc;">    S: SigT;
+</span></code></pre>
+<p>This simplifies implementing methods for signals that are only available
+for certain <code>Item</code> types, and making it easier to implement other traits
+for signals such as those associated with arithmetic operators.
+The following doesn’t work well in Rust:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="background-color:#171717;color:#616161;">// Values of any pair of types L, and R, both implementing SigT&lt;f32&gt;
+</span><span style="background-color:#171717;color:#616161;">// can be added together.
+</span><span style="color:#80d500;">impl</span><span style="color:#cccccc;">&lt;L: SigT&lt;Item=</span><span style="color:#80d500;">f32</span><span style="color:#cccccc;">&gt;, R: SigT&lt;Item=</span><span style="color:#80d500;">f32</span><span style="color:#cccccc;">&gt;&gt; Add&lt;R&gt; </span><span>for </span><span style="color:#cccccc;">L {
+</span><span style="color:#cccccc;">    </span><span>...
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>The problem is that it’s possible to implement <code>SigT</code> for a type that already
+implements <code>Add</code>, such as <code>f32</code>, and Rust only allows one implementation of a trait
+per type. Even the <em>possibility</em> that <code>SigT</code> could be implemented for <code>f32</code> is
+enough to cause problems. Generally I’ve found that blanket implementations
+of a trait for <em>all</em> implementations of some other trait should be avoided, and instead
+introduce a new type wrapping implementations of the trait, like:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">impl</span><span style="color:#cccccc;">&lt;L: SigT&lt;Item=</span><span style="color:#80d500;">f32</span><span style="color:#cccccc;">&gt;, R: SigT&lt;Item=</span><span style="color:#80d500;">f32</span><span style="color:#cccccc;">&gt;&gt; Add&lt;Sig&lt;R&gt;&gt; </span><span>for </span><span style="color:#cccccc;">Sig&lt;L&gt; {
+</span><span style="color:#cccccc;">    </span><span>...
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>It seems like it might get cumbersome wrapping every signal in the <code>Sig</code> type, but
+the majority of signal operations are methods of <code>Sig</code>, not <code>SigT</code>, and they take
+care of wrapping their results in <code>Sig</code> so it’s almost never necessary to explicitly
+wrap values with <code>Sig</code> in client code.</p>
+<h2 id="sharing">Sharing</h2>
+<p>When composing modules with CAW, all the inputs to a module end up contained by that
+module. This was true in the original implementation as well as the new one, however
+originally all modules could be <code>clone</code>d. But unboxing signals means taking away the
+<code>Rc&lt;_&gt;</code> that allowed signals to be shallow-copied and passed as input to multiple
+modules. Now when you pass a signal as input to a module, it’s removed from scope
+and can’t be passed to another modules.</p>
+<p>In a way this is maybe more realistic, since you normally can’t plug multiple cables into
+a single jack socket (unless you use banana jacks!). And it turns out that most of the time I end up making long linear
+chains of signals with no sharing of a signal between modules.</p>
+<p>But sometimes you do need to split a signal and use it in two places!</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/stacked-banana-jacks.jpg" alt="An analog synthesizer module with a stack of multiple cable terminators plugged into the same jack socket." /></p>
+<p>To solve this I introduced a new type <code>SigShared</code>:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="background-color:#171717;color:#616161;">/// A wrapper of a signal which can be shallow-cloned. Use this to split a
+</span><span style="background-color:#171717;color:#616161;">/// signal into two copies of itself without duplicating all the computations
+</span><span style="background-color:#171717;color:#616161;">/// that produced the signal. Incurs a small performance penalty as buffered
+</span><span style="background-color:#171717;color:#616161;">/// values must be copied from the underlying signal into each instance of the
+</span><span style="background-color:#171717;color:#616161;">/// shared signal.
+</span><span style="color:#80d500;">pub struct </span><span style="color:#cccccc;">SigShared&lt;S&gt;
+</span><span style="color:#cccccc;">where
+</span><span style="color:#cccccc;">    S: SigT,
+</span><span style="color:#cccccc;">{
+</span><span style="color:#cccccc;">    shared_cached_sig: Arc&lt;RwLock&lt;SigCached&lt;S&gt;&gt;&gt;,
+</span><span style="color:#cccccc;">    buf: </span><span style="color:#8aa6c1;">Vec</span><span style="color:#cccccc;">&lt;</span><span style="color:#80d500;">S::</span><span style="color:#cccccc;">Item&gt;,
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>The <code>Sig&lt;S&gt;</code> type has a method <code>shared</code>:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">pub fn </span><span>shared</span><span style="color:#cccccc;">(</span><span style="font-style:italic;color:#8aa6c1;">self</span><span style="color:#cccccc;">) -&gt; Sig&lt;SigShared&lt;S&gt;&gt;
+</span></code></pre>
+<p>…which makes a shareable version of the signal. Note that the result is still
+wrapped in <code>Sig</code>, and can be used in all the same ways as a regular <code>Sig&lt;_&gt;</code>
+except it can now also be <code>clone</code>d and passed as input to multiple modules.</p>
+<h2 id="input-latency">Input Latency</h2>
+<p>As described above, CAW is periodically presented with buffers from the sound driver which
+it must populate with audio samples to be played. The sound card operates at a particular
+sample rate, usually around 44kHz. If the program is keeping up, this means that it’s producing
+exactly 44000 samples each second and writing those samples into the sound driver’s buffer.
+The samples from a buffer don’t start playing on the speaker until the entire buffer is
+filled, and the larger the buffer, the longer it takes to fill. CAW’s modules batch
+computations over a buffer’s worth of samples, with the intuition that computing more
+samples in a single batch will be more efficient. So larger buffers allow CAW to compute
+more samples per second, but also increase the time between computing a sample and that
+sample reaching the speaker. It’s a latency vs throughput trade-off.</p>
+<p>When generating music automatically, a large buffer with high latency might be ideal
+because latency doesn’t matter and the increased throughput means you can build a more
+complex sound before hitting performance issues. When playing live, you want the effect
+of a key press or other input to be effectively instant, so a smaller buffer is more
+appropriate.</p>
+<p>CAW lets you specify a target latency, and will choose an appropriate buffer size
+based on the target latency and the sound card’s sample rate, bearing in mind
+that some sound drivers have limits on the buffer sizes they support.</p>
+<h2 id="performance">Performance</h2>
+<p>I did an experiment where I played the sum of a collection of detuned sawtooth wave
+oscillators and kept adding more oscillators until I heard a persistent crackle
+indicating the program couldn’t keep up with the sound card. On my M2 Macbook Air
+I could originally run only ~450, and after these changes I can now run ~3000.</p>
+<p>However, making signals into traits means that it’s possible to implement the
+trait in a way that can be sent between threads. Also it’s possible to compute
+sawtooth wave samples using SIMD instructions, so 8 different sawtooth waves
+can be computed in parallel within a single thread. On my 16-core AMD Ryzen machine
+I was able to get around 500k concurrent detuned sawtooth waves by combining
+these two approaches. There wasn’t enough headroom to also record the result,
+but here’s spooky 366600 sawtooth demo where batches of oscillators are detuned
+around different notes making a tritone chord:</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/vUG-9yRYCUc?si=CxvS8frdT-kb1-sb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<p>Adding many sawtooth waves produces an interference pattern quite different
+from the “supersaw” effect of adding 2 to 10 or so. Sometimes many
+waves drift into phase with each other producing “wubs”. Here’s a less ambitious
+48k concurrent sawtooth wave demo. If you click through to the youtube page, the description has
+a list of all the wubs with timestamps:</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/rcITgv4L76g?si=S--csTBvS0V4GyRJ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<h2 id="what-s-next">What’s next?</h2>
+<p>My most recent work on CAW has been focused on using it for live coding,
+where synthesizers can be built up and dynamically modified in a jupyter
+notebook with graphical UI elements for knobs and buttons.</p>
+<p>More on that in <a href="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-3/">Part 3</a>.</p>
+
+</article>
+
+
+<div class="next-prev-nav-container">
+  <nav>
+    <ul>
+      
+      
+      
+      
+      <li class="nav-prev">
+	
+	<a href="https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;" aria-label="Previous">
+	  Previous: Briefcase Synth
+	</a>
+	
+      </li>
+      <li class="nav-next">
+	
+	<a href="https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-3&#x2F;" aria-label="Next">
+	  Next: CAW (part 3): Live Coding with CAW
+	</a>
+	
+      </li>
+    </ul>
+  </nav>
+</div>
+
+
+
+                <!-- end of "content" -->
+            </div>
+
+            <footer>
+  <div class="copyright">
+      © 2025-2026 <a href="https://www.purpleearthhypothesis.com">purpleearthhypothesis.com</a>
+  </div>
+</footer>
+
+
+            <!-- end of "mid" -->
+          </div>
+
+          <!-- end of "columns" -->
+        </div>
+
+        <a id="spin" class="ibis-size margin-decoration" href="#ibis-scroll-target">
+          <div id="glasses-left" class="glasses ibis-size"></div>
+          <div id="glasses-right" class="glasses ibis-size"></div>
+          <div id="ibis" class="ibis-size"></div>
+        </a>
+
+        <div id="normal-scroll-target"></div>
+        <div id="ibis-scroll-target"></div>
+
+        <div id="lowsky"></div>
+        <div id="horizon"></div>
+        <div id="mountains"></div>
+        <div id="mountains-base"></div>
+        <div id="mountains-base-brighter"></div>
+        <div id="ground">
+          <div id="grid-overlay1"></div>
+          <div id="grid-overlay2"></div>
+          <div id="grid"></div>
+        </div>
+
+        <div id="palm1" class="palm"></div>
+        <div id="palm2" class="palm"></div>
+
+        <div id="star-container"></div>
+
+        <!-- end of "page" -->
+    </div>
+    <script>
+      const NUM_STARS = 500;
+      const MAX_STAR_TOP_PX = 8000;
+      function make_star() {
+        const star = document.createElement("div");
+        star.style.left = `${parseInt(Math.random() * 94 + 2)}%`;
+        star.style.top = `${parseInt(Math.random() * MAX_STAR_TOP_PX)}px`;
+        star.style.fontSize = `${parseInt(Math.random() * 20 + 8)}px`;
+        return star;
+      }
+      const star_container = document.getElementById("star-container");
+      for (let i = 0; i < NUM_STARS; i++) {
+        star_container.appendChild(make_star());
+      }
+    </script>
+    <script type="text/javascript" src="https://gridbugs.github.io/purpleearthhypothesis.com/keyboard.js"></script>
+    <script>
+      run_keyboard("https://gridbugs.github.io/purpleearthhypothesis.com/assets/keyboard-color-map.png");
+    </script>
+  </body>
+</html>

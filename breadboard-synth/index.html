@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="Purple Earth Hypothesis">
+    <meta property="og:type" content="website">
+    <meta name="color-scheme" content="dark">
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+      <meta property="og:type" content="article">
+      <meta property="og:title" content="
+Breadboard Synth
+">
+      <link rel="canonical" href="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/">
+      <meta property="og:url" content="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/">
+
+      
+        <meta name="description" content="DIY Synthesizer Blog">
+        <meta property="og:description" content="DIY Synthesizer Blog">
+      
+
+      
+        <meta property="article:published_time" content="2026-01-06T00:00:00+00:00">
+      
+      
+        <meta property="og:image" content="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/breadboard-synth.jpg">
+      
+    
+
+    <meta property="og:image" content="https://gridbugs.github.io/purpleearthhypothesis.com/ibis.png">
+
+
+    <link rel="icon" type="image/x-icon" href="https://gridbugs.github.io/purpleearthhypothesis.com/favicon.png">
+    <link rel="alternate" type="application/rss+xml" title="Purple Earth Hypothesis" href="https://gridbugs.github.io/purpleearthhypothesis.com/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Purple Earth Hypothesis" href="https://gridbugs.github.io/purpleearthhypothesis.com/atom.xml">
+
+    <link rel="stylesheet" href="https://gridbugs.github.io/purpleearthhypothesis.com/style.css">
+    <title>
+Breadboard Synth
+</title>
+  </head>
+  <body>
+    <div id="page">
+      <!-- Empty tag so that the normal scroll target has something apply to,
+        even though it has no visible effect. Without this the "ibis" scroll target
+        would always be active. -->
+        <a href="#normal-scroll-target"></a>
+
+        <div id="columns">
+
+          <div id="left"></div>
+
+          <div id="right">
+            <div id="keyboard" class="margin-decoration">
+              <div id="key-24"></div>
+              <div id="key-23-b"></div>
+              <div id="key-22"></div>
+              <div id="key-23-f"></div>
+              <div id="key-21-b"></div>
+              <div id="key-20"></div>
+              <div id="key-21-f"></div>
+              <div id="key-19-b"></div>
+              <div id="key-18"></div>
+              <div id="key-19-f"></div>
+              <div id="key-17"></div>
+              <div id="key-16-b"></div>
+              <div id="key-15"></div>
+              <div id="key-16-f"></div>
+              <div id="key-14-b"></div>
+              <div id="key-13"></div>
+              <div id="key-14-f"></div>
+              <div id="key-12"></div>
+              <div id="key-11-b"></div>
+              <div id="key-10"></div>
+              <div id="key-11-f"></div>
+              <div id="key-9-b"></div>
+              <div id="key-8"></div>
+              <div id="key-9-f"></div>
+              <div id="key-7-b"></div>
+              <div id="key-6"></div>
+              <div id="key-7-f"></div>
+              <div id="key-5"></div>
+              <div id="key-4-b"></div>
+              <div id="key-3"></div>
+              <div id="key-4-f"></div>
+              <div id="key-2-b"></div>
+              <div id="key-1"></div>
+              <div id="key-2-f"></div>
+              <div id="key-0"></div>
+            </div>
+          </div>
+
+          <div id="mid">
+            <div id="content">
+                <header>
+  <div id="header-nav-container">
+    <nav>
+      <ul>
+        <li><a href="https://gridbugs.github.io/purpleearthhypothesis.com">Purple Earth Hypothesis</a></li>
+        <li class="first-rhs"><a href="https://gridbugs.github.io/purpleearthhypothesis.com/about">About</a></li>
+        <li><a href="https://gridbugs.github.io/purpleearthhypothesis.com/blog">Blog</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+                
+
+
+
+
+<article>
+<h1 class="title">Breadboard Synth</h1>
+
+  
+<p class="post-meta">
+  <time datetime="2026-01-06T00:00:00+00:00">
+    January 06, 2026
+  </time>
+  
+  in
+  
+  <a href="https://gridbugs.github.io/purpleearthhypothesis.com/tags/project" aria-label="tag">project</a>
+  <a href="https://gridbugs.github.io/purpleearthhypothesis.com/tags/hardware" aria-label="tag">hardware</a>
+  
+</p>
+
+
+  
+
+<p>In late 2023 I had a reasonable understanding of the basic circuits for a handful of
+synth modules but still had too many questions to confidently start building anything,
+and by sheer luck Look Mum No Computer uploaded <a href="https://youtu.be/GsTGu2V7tcU">this video</a>
+building an entire synthesizer voice from scratch on breadboards. I followed along.</p>
+<p>Step one was getting the oscillator working on a breadboard.
+I used a AS3340 oscillator on-a-chip, which is a clone of the legendary CEM3340.
+All I was trying to do was add the supporting components according to the AS3340
+manual and connect it to power, but still it took several weekends to make it work.
+The problems were components not making good contact with the
+breadboard, and the AS3340 chip being faulty, probably because I broke it without realizing.
+Fortunately I had spares.</p>
+<p>Eventually my oscilloscope confirmed that my oscillator was working:</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/oscillator.jpg" alt="An oscilloscope connected to a breadboard circuit. The screen of the oscilloscope shows a triangle wave and sawtooth wave. Some knobs are taped to a sheet of cardboard and wired into the breadboard. An additional circuit with a red and blue LED is attached to the breadboard with a cable." /></p>
+<p>In the image above, the oscillator is implemented on the breadboard.
+There are a pair of knobs on the right that control the pitch of the oscillator - one is for coarse control
+and the other for fine control. The fine pitch control would usually be done with a smaller trim pot
+but I didn’t have any at the time. Turning either knob would change the frequency of the signal plotted by the
+oscilloscope.</p>
+<p>The circuit-board at the top right with the red and blue LEDs is the power supply.
+Almost every synthesizer circuit I came across requires a positive and <em>negative</em> DC power input (as well as ground).
+Information on how to make a negative voltage was a bit hard to find.
+The first technique I learnt about is called a <em>charge pump</em>, which produces an output DC voltage
+out of a possibly different input DC voltage using a timer (like a 555 timer) to repeatedly charge and discharge a capacitor.
+The output voltage can be negative.</p>
+<p>The power supply plugs into a 12v DC wall wart. It forwards the +12v and ground inputs directly to its output,
+and uses a charge pump to create the additional -12v output. This worked fine for oscillator as it didn’t
+draw a lot of current, however as the synth got more complicated and power hungry my little power supply couldn’t
+keep up.</p>
+<p>Eventually I found a much simpler technique for making a negative voltage where you take an <em>AC</em> input (not straight from mains! - the one here uses a 12v AC wall wart) and
+separate it into its positive and negative components. The positive and negative components of the input
+are used to charge some (big!) capacitors that discharge through the power supply’s output.
+I first learnt about this approach <a href="https://youtu.be/pQKN30Mzi2g">here</a>.
+I built a new power supply which had no trouble powering the entire breadboard synth and I’ve used the same technique in all my later analog synths.</p>
+<p>Here’s my second power supply. Look at those capacitors!
+I was a bit nervous the first time I turned it on…</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/power-supply.jpg" alt="A home-made power supply on strip board" /></p>
+<p>The red and blue LEDs indicate that the positive and negative voltage outputs are working.
+In addition to being pretty they’re a safety feature.
+If either LED is off while the device is powered on it suggests one of the synth modules has shorted out so you can quickly turn off the power and investigate.
+Also these big capacitors can store a lot of energy, and they continue to store it long after the power has been turned off, so it’s possible to get shocked while working on the power supply even if it’s not plugged in.
+The LEDs are a constant small load on the power supply which lets the capacitors discharge over several seconds after turning off
+the device, and you can use the fact that the LEDs are off to tell that it’s safe to lick I mean touch.</p>
+<p>And here’s the full breadboard synthesizer:</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/breadboard-synth/breadboard-synth.jpg" alt="5 breadboards all connected together. The bottom two are populated with 16 knobs in a row while the rest have various circuitry. Many knobs are attached to a cardboard sheet, all wired into the breadboards. The power supply is connected to the breadboards." /></p>
+<p>The two breadboards in the centre contain the synth voice like the one from the LMNC video.
+There’s a pair of oscillators that can modulate each other’s pitch, a low-pass filter, and an envelope generator. The additional breadboards
+are a 16-step sequencer. An Arduino controls the timing and note duration and uses a decoder to select one
+of the 16 knobs at a time from the bottom two breadboards. The position of each of those 16 knobs determines the pitch of
+one of the 16 notes in the sequence.</p>
+<p>Too see the breadboard synth in action at various stages of completion, check out <a href="https://youtube.com/playlist?list=PLggSMLJ5AJ0lLp-nO7WwMEh1cL222ic6l">this youtube playlist</a>.</p>
+
+</article>
+
+
+<div class="next-prev-nav-container">
+  <nav>
+    <ul>
+      
+      
+      
+      
+      <li class="nav-prev">
+	
+	<a href="https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;llama&#x2F;" aria-label="Previous">
+	  Previous: Llama - A Programmable Modular Synth in OCaml
+	</a>
+	
+      </li>
+      <li class="nav-next">
+	
+	<a href="https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;caw-part-1&#x2F;" aria-label="Next">
+	  Next: CAW (part 1): A Rust library for making Synthesizers
+	</a>
+	
+      </li>
+    </ul>
+  </nav>
+</div>
+
+
+
+                <!-- end of "content" -->
+            </div>
+
+            <footer>
+  <div class="copyright">
+      © 2025-2026 <a href="https://www.purpleearthhypothesis.com">purpleearthhypothesis.com</a>
+  </div>
+</footer>
+
+
+            <!-- end of "mid" -->
+          </div>
+
+          <!-- end of "columns" -->
+        </div>
+
+        <a id="spin" class="ibis-size margin-decoration" href="#ibis-scroll-target">
+          <div id="glasses-left" class="glasses ibis-size"></div>
+          <div id="glasses-right" class="glasses ibis-size"></div>
+          <div id="ibis" class="ibis-size"></div>
+        </a>
+
+        <div id="normal-scroll-target"></div>
+        <div id="ibis-scroll-target"></div>
+
+        <div id="lowsky"></div>
+        <div id="horizon"></div>
+        <div id="mountains"></div>
+        <div id="mountains-base"></div>
+        <div id="mountains-base-brighter"></div>
+        <div id="ground">
+          <div id="grid-overlay1"></div>
+          <div id="grid-overlay2"></div>
+          <div id="grid"></div>
+        </div>
+
+        <div id="palm1" class="palm"></div>
+        <div id="palm2" class="palm"></div>
+
+        <div id="star-container"></div>
+
+        <!-- end of "page" -->
+    </div>
+    <script>
+      const NUM_STARS = 500;
+      const MAX_STAR_TOP_PX = 8000;
+      function make_star() {
+        const star = document.createElement("div");
+        star.style.left = `${parseInt(Math.random() * 94 + 2)}%`;
+        star.style.top = `${parseInt(Math.random() * MAX_STAR_TOP_PX)}px`;
+        star.style.fontSize = `${parseInt(Math.random() * 20 + 8)}px`;
+        return star;
+      }
+      const star_container = document.getElementById("star-container");
+      for (let i = 0; i < NUM_STARS; i++) {
+        star_container.appendChild(make_star());
+      }
+    </script>
+    <script type="text/javascript" src="https://gridbugs.github.io/purpleearthhypothesis.com/keyboard.js"></script>
+    <script>
+      run_keyboard("https://gridbugs.github.io/purpleearthhypothesis.com/assets/keyboard-color-map.png");
+    </script>
+  </body>
+</html>
