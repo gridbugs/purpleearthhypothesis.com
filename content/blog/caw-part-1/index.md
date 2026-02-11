@@ -1,7 +1,8 @@
 +++
-title = "CAW (part 1)"
+title = "CAW (part 1): A Rust library for making Synthesizers"
 date = 2026-01-07
 path = "caw-part-1"
+description = "A Rust library for making Synthesizers"
 
 [taxonomies]
 tags = ["project", "software"]

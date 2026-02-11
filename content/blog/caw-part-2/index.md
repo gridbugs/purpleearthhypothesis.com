@@ -1,5 +1,5 @@
 +++
-title = "CAW (part 2)"
+title = "CAW (part 2): Optimizing CAW"
 date = 2026-02-03
 path = "caw-part-2"
 description = "Optimizing my Rust synthesizer library"
@@ -239,4 +239,4 @@ My most recent work on CAW has been focused on using it for live coding,
 where synthesizers can be built up and dynamically modified in a jupyter
 notebook with graphical UI elements for knobs and buttons.
 
-More on that in Part 3.
+More on that in [Part 3](@/blog/caw-part-3/index.md).
