@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="Purple Earth Hypothesis">
+    <meta property="og:type" content="website">
+    <meta name="color-scheme" content="dark">
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+      <meta property="og:type" content="article">
+      <meta property="og:title" content="
+CAW (part 1): A Rust library for making Synthesizers
+">
+      <link rel="canonical" href="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/">
+      <meta property="og:url" content="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/">
+
+      
+        <meta name="description" content="A Rust library for making Synthesizers">
+        <meta property="og:description" content="A Rust library for making Synthesizers">
+      
+
+      
+        <meta property="article:published_time" content="2026-01-07T00:00:00+00:00">
+      
+      
+        <meta property="og:image" content="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/caw.jpg">
+      
+    
+
+    <meta property="og:image" content="https://gridbugs.github.io/purpleearthhypothesis.com/ibis.png">
+
+
+    <link rel="icon" type="image/x-icon" href="https://gridbugs.github.io/purpleearthhypothesis.com/favicon.png">
+    <link rel="alternate" type="application/rss+xml" title="Purple Earth Hypothesis" href="https://gridbugs.github.io/purpleearthhypothesis.com/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Purple Earth Hypothesis" href="https://gridbugs.github.io/purpleearthhypothesis.com/atom.xml">
+
+    <link rel="stylesheet" href="https://gridbugs.github.io/purpleearthhypothesis.com/style.css">
+    <title>
+CAW (part 1): A Rust library for making Synthesizers
+</title>
+  </head>
+  <body>
+    <div id="page">
+      <!-- Empty tag so that the normal scroll target has something apply to,
+        even though it has no visible effect. Without this the "ibis" scroll target
+        would always be active. -->
+        <a href="#normal-scroll-target"></a>
+
+        <div id="columns">
+
+          <div id="left"></div>
+
+          <div id="right">
+            <div id="keyboard" class="margin-decoration">
+              <div id="key-24"></div>
+              <div id="key-23-b"></div>
+              <div id="key-22"></div>
+              <div id="key-23-f"></div>
+              <div id="key-21-b"></div>
+              <div id="key-20"></div>
+              <div id="key-21-f"></div>
+              <div id="key-19-b"></div>
+              <div id="key-18"></div>
+              <div id="key-19-f"></div>
+              <div id="key-17"></div>
+              <div id="key-16-b"></div>
+              <div id="key-15"></div>
+              <div id="key-16-f"></div>
+              <div id="key-14-b"></div>
+              <div id="key-13"></div>
+              <div id="key-14-f"></div>
+              <div id="key-12"></div>
+              <div id="key-11-b"></div>
+              <div id="key-10"></div>
+              <div id="key-11-f"></div>
+              <div id="key-9-b"></div>
+              <div id="key-8"></div>
+              <div id="key-9-f"></div>
+              <div id="key-7-b"></div>
+              <div id="key-6"></div>
+              <div id="key-7-f"></div>
+              <div id="key-5"></div>
+              <div id="key-4-b"></div>
+              <div id="key-3"></div>
+              <div id="key-4-f"></div>
+              <div id="key-2-b"></div>
+              <div id="key-1"></div>
+              <div id="key-2-f"></div>
+              <div id="key-0"></div>
+            </div>
+          </div>
+
+          <div id="mid">
+            <div id="content">
+                <header>
+  <div id="header-nav-container">
+    <nav>
+      <ul>
+        <li><a href="https://gridbugs.github.io/purpleearthhypothesis.com">Purple Earth Hypothesis</a></li>
+        <li class="first-rhs"><a href="https://gridbugs.github.io/purpleearthhypothesis.com/about">About</a></li>
+        <li><a href="https://gridbugs.github.io/purpleearthhypothesis.com/blog">Blog</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+                
+
+
+
+
+<article>
+<h1 class="title">CAW (part 1): A Rust library for making Synthesizers</h1>
+
+  
+<p class="post-meta">
+  <time datetime="2026-01-07T00:00:00+00:00">
+    January 07, 2026
+  </time>
+  
+  in
+  
+  <a href="https://gridbugs.github.io/purpleearthhypothesis.com/tags/project" aria-label="tag">project</a>
+  <a href="https://gridbugs.github.io/purpleearthhypothesis.com/tags/software" aria-label="tag">software</a>
+  
+</p>
+
+
+  
+
+<p><a href="https://github.com/gridbugs/caw">CAW</a> started out as a rewrite of <a href="https://gridbugs.github.io/purpleearthhypothesis.com/llama/">Llama</a> into Rust.
+It’s a software-defined modular synthesizer - a library that can be used to create synthesizers by declaratively
+describing a graph of interconnected modules. I rewrote Llama in Rust because I was frustrated with the state
+of OCaml development tooling (read more about this <a href="https://www.gridbugs.org/frustrating-interactions-with-the-ocaml-ecosystem-while-developing-a-synthesizer-library/">here</a>).
+This post covers the state of CAW as of around the end of 2024 when I rewrote it
+pretty much from scratch with an eye for performance.
+I’ll cover the basic concepts in this post, as well as some considerations in
+switching from OCaml to Rust, and in <a href="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/">Part 2</a> I’ll focus on what I’ve changed and
+added since then.</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/caw.jpg" alt="The CAW logo - a crow playing a keytar" /></p>
+<p>As with Llama, the core concept is signals - streams of values where elements are produced at the
+sound card’s sample rate (usually about 44kHz). In CAW the main type is <code>Signal&lt;T&gt;</code> representing a stream
+of some type <code>T</code>. Here’s an example showcasing the main differences between doing this in OCaml and Rust.
+I’ll show the code for a simple synthesizer implemented with Llama and CAW, then discuss the differences.</p>
+<pre data-lang="ocaml" style="background-color:#191919;color:#ffffff;" class="language-ocaml "><code class="language-ocaml" data-lang="ocaml"><span>open </span><span style="color:#8aa6c1;">Llama
+</span><span>open </span><span style="color:#8aa6c1;">Dsl
+</span><span style="color:#cccccc;">
+</span><span>let </span><span style="color:#80d500;">() </span><span>=
+</span><span style="color:#cccccc;">  </span><span>let </span><span style="color:#cccccc;">osc </span><span>=</span><span style="color:#cccccc;"> oscillator (const Saw) (const </span><span style="color:#eddd5a;">100.0</span><span style="color:#cccccc;">) </span><span>in
+</span><span style="color:#cccccc;">  </span><span>let </span><span style="color:#cccccc;">gate </span><span>=</span><span style="color:#cccccc;"> periodic_gate </span><span style="color:#80d500;">~frequency_hz:</span><span style="color:#cccccc;">(const </span><span style="color:#eddd5a;">5.0</span><span style="color:#cccccc;">) </span><span style="color:#80d500;">~duty_01:</span><span style="color:#cccccc;">(const </span><span style="color:#eddd5a;">0.05</span><span style="color:#cccccc;">) </span><span>in
+</span><span style="color:#cccccc;">  </span><span>let </span><span style="color:#cccccc;">env </span><span>=</span><span style="color:#cccccc;"> ar_linear </span><span style="color:#80d500;">~gate ~attack_s:</span><span style="color:#cccccc;">(const </span><span style="color:#eddd5a;">0.01</span><span style="color:#cccccc;">) </span><span style="color:#80d500;">~release_s:</span><span style="color:#cccccc;">(const </span><span style="color:#eddd5a;">0.15</span><span style="color:#cccccc;">) </span><span>in
+</span><span style="color:#cccccc;">  </span><span>let </span><span style="color:#cccccc;">osc_filtered </span><span>=
+</span><span style="color:#cccccc;">    osc </span><span>|&gt;</span><span style="color:#cccccc;"> butterworth_low_pass_filter </span><span style="color:#80d500;">~cutoff_hz:</span><span style="color:#cccccc;">(env </span><span>|&gt;</span><span style="color:#cccccc;"> scale </span><span style="color:#eddd5a;">20000.0</span><span style="color:#cccccc;">)
+</span><span style="color:#cccccc;">  </span><span>in
+</span><span style="color:#cccccc;">  </span><span>let </span><span style="color:#cccccc;">output </span><span>=</span><span style="color:#cccccc;"> osc_filtered </span><span>*.</span><span style="color:#cccccc;">. env </span><span>in
+</span><span style="color:#cccccc;">  play_signal output
+</span></code></pre>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span>use </span><span style="color:#cccccc;">caw::prelude::</span><span>*</span><span style="color:#cccccc;">;
+</span><span style="color:#cccccc;">
+</span><span style="color:#80d500;">fn </span><span>main</span><span style="color:#cccccc;">() -&gt; anyhow::</span><span style="color:#8aa6c1;">Result</span><span style="color:#cccccc;">&lt;()&gt; {
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> osc </span><span>= </span><span style="color:#8aa6c1;">oscillator_hz</span><span style="color:#cccccc;">(Waveform::Saw, </span><span style="color:#eddd5a;">100.0</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">();
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> gate </span><span>= </span><span style="color:#8aa6c1;">periodic_gate_s</span><span style="color:#cccccc;">(</span><span style="color:#eddd5a;">0.2</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">duty_01</span><span style="color:#cccccc;">(</span><span style="color:#eddd5a;">0.05</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">();
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> env </span><span>= </span><span style="color:#8aa6c1;">adsr_linear_01</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="color:#cccccc;">gate).</span><span style="color:#8aa6c1;">attack_s</span><span style="color:#cccccc;">(</span><span style="color:#eddd5a;">0.01</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">release_s</span><span style="color:#cccccc;">(</span><span style="color:#eddd5a;">0.15</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">();
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> osc_filtered </span><span>=
+</span><span style="color:#cccccc;">        osc.</span><span style="color:#8aa6c1;">filter</span><span style="color:#cccccc;">(</span><span style="color:#8aa6c1;">low_pass_butterworth</span><span style="color:#cccccc;">(env.</span><span style="color:#8aa6c1;">clone</span><span style="color:#cccccc;">() </span><span>* </span><span style="color:#eddd5a;">20_000.0</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">());
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> output </span><span>=</span><span style="color:#cccccc;"> osc_filtered </span><span>*</span><span style="color:#cccccc;"> env;
+</span><span style="color:#cccccc;">    SignalPlayer::new()</span><span>?</span><span style="color:#cccccc;">.</span><span style="color:#8aa6c1;">play_sample_forever</span><span style="color:#cccccc;">(output)
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>Both of these programs play a 100Hz sawtooth wave modulated by an envelope that
+controls both the volume and filter cutoff.</p>
+<p>A major difference is that in Rust there are no named function parameters.
+If the inputs to modules were passed as regular function arguments then it will
+be difficult to tell the meaning of each argument at a glance.
+To work around this, in CAW modules are created using the “builder pattern”.
+If there are mandatory arguments whose meaning is obvious without a label then
+they are passed as regular (anonymous) arguments to the “constructor” (functions
+like <code>oscillator_hz</code> and <code>low_pass_butterworth</code>) which creates a builder for the
+respective module type. Then methods can be chained onto the builder which
+override default values for any other module parameters. Finally the <code>.build()</code> method
+actually creates the module.</p>
+<p>An alternative to the builder pattern might be to use structs of arguments.
+In Rust a struct literal is written with named fields, and if the struct
+implements the <code>Default</code> trait then it’s quite ergonomic to omit fields and use
+their default values.
+Had I gone down this route, the
+<code>adsr_linear_01</code> module could be created like:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#cccccc;">AdsrLinear01Args {
+</span><span style="color:#cccccc;">    gate,
+</span><span style="color:#cccccc;">    attack_s: </span><span style="color:#eddd5a;">0.01</span><span style="color:#cccccc;">,
+</span><span style="color:#cccccc;">    release_s: </span><span style="color:#eddd5a;">0.15</span><span style="color:#cccccc;">,
+</span><span style="color:#cccccc;">    </span><span>..</span><span style="color:#8aa6c1;">Default</span><span style="color:#cccccc;">::default(),
+</span><span style="color:#cccccc;">}.</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">()
+</span></code></pre>
+<p>I opted to not use this approach because it felt was less
+ergonomic. Code formatters would tend to split definitions over multiple
+lines rather than putting definitions all on a single line as with (at least
+short) chains of methods when using the builder pattern.
+It also requires that the struct implements <code>Default</code> which might not make
+sense. The builder pattern allows modules to have both mandatory and optional
+fields.</p>
+<p>Another big difference is that in Llama, when passing a constant value to a
+function which expects a signal, the <code>const</code> function must be used to produce a
+signal which always yields a given value. This is not necessary in CAW.
+To understand, let’s take a look at the types of the
+<code>periodic_gate</code>/<code>periodic_gate_hz</code> functions.</p>
+<p>In Llama its type is:</p>
+<pre data-lang="ocaml" style="background-color:#191919;color:#ffffff;" class="language-ocaml "><code class="language-ocaml" data-lang="ocaml"><span style="background-color:#171717;color:#616161;">(* The [&#39;a t] type constructor represents signals yielding values of type &#39;a. *)</span><span style="color:#cccccc;">
+</span><span>val </span><span style="color:#cccccc;">periodic_gate : </span><span style="color:#80d500;">frequency_hz</span><span style="font-style:italic;color:#8aa6c1;">:</span><span style="color:#80d500;">float t </span><span style="color:#cccccc;">-&gt; </span><span style="color:#80d500;">duty_01</span><span style="font-style:italic;color:#8aa6c1;">:</span><span style="color:#80d500;">float t </span><span style="color:#cccccc;">-&gt; </span><span style="color:#8aa6c1;">Gate</span><span style="color:#80d500;">.t
+</span></code></pre>
+<p>In CAW its type is:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">fn </span><span>periodic_gate_s</span><span style="color:#cccccc;">(</span><span style="font-style:italic;color:#8aa6c1;">freq_s</span><span style="color:#cccccc;">: impl </span><span style="color:#8aa6c1;">Into</span><span style="color:#cccccc;">&lt;Signal&lt;</span><span style="color:#80d500;">f64</span><span style="color:#cccccc;">&gt;&gt;) -&gt; PeriodicGateBuilder
+</span></code></pre>
+<p>CAW uses the <code>Into</code> trait to allow functions to take values of any type which
+can be converted into signals. The <code>f64</code> type implements this trait, converting
+scalar values to constant-valued signals. Similarly in Rust the arithmetic operators can
+be overloaded to allow signals to be multiplied by other signals or by scalars as in <code>osc_filtered * env</code> and <code>env.clone() * 20_000.0</code>.
+In Llama I needed to define a new operator <code>*..</code> for multiplying signals with other
+signals, and the helper function <code>scale</code> multiplies a signal with a scalar.</p>
+<p>Rust lacks a pipeline operator like OCaml’s “<code>|&gt;</code>”, however code that would be
+written as pipelines in OCaml translate naturally into chains of method.
+I wanted to avoid making every module a method of <code>Signal&lt;T&gt;</code> so
+I introduced the concept of a <code>Filter</code>, which is a trait defined like:</p>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#80d500;">trait </span><span style="color:#cccccc;">Filter {
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">type </span><span style="color:#cccccc;">Input;
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">type </span><span style="color:#cccccc;">Output;
+</span><span style="color:#cccccc;">
+</span><span style="color:#cccccc;">    </span><span style="color:#80d500;">fn </span><span>run</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="font-style:italic;color:#8aa6c1;">self</span><span style="color:#cccccc;">, </span><span style="font-style:italic;color:#8aa6c1;">input</span><span style="color:#cccccc;">: </span><span style="color:#80d500;">Self::</span><span style="color:#cccccc;">Input, </span><span style="font-style:italic;color:#8aa6c1;">ctx</span><span style="color:#cccccc;">: </span><span>&amp;</span><span style="color:#cccccc;">SignalCtx) -&gt; </span><span style="color:#80d500;">Self::</span><span style="color:#cccccc;">Output;
+</span><span style="color:#cccccc;">}
+</span></code></pre>
+<p>The <code>Input</code> and <code>Output</code> types are usually <code>Signal&lt;f64&gt;</code>.
+This trait is a little too generic in hindsight, and is refined in more recent
+versions of CAW.</p>
+<p>The <code>filter</code> method in the example above takes an implementation of <code>Filter</code>
+and applies it to <code>self</code>. It’s common to chain successive calls of <code>filter</code> to
+apply a sequence of filters to a signal.</p>
+<p>Since CAW is written in Rust we have to think a bit about memory. Note how the
+CAW example calls the <code>.clone()</code> method on the envelope. Here’s the relevant
+parts of the code again:</p>
+<pre data-lang="ocaml" style="background-color:#191919;color:#ffffff;" class="language-ocaml "><code class="language-ocaml" data-lang="ocaml"><span style="color:#cccccc;">...
+</span><span>let </span><span style="color:#cccccc;">env </span><span>=</span><span style="color:#cccccc;"> ar_linear </span><span style="color:#80d500;">~gate ~attack_s:</span><span style="color:#cccccc;">(const </span><span style="color:#eddd5a;">0.01</span><span style="color:#cccccc;">) </span><span style="color:#80d500;">~release_s:</span><span style="color:#cccccc;">(const </span><span style="color:#eddd5a;">0.15</span><span style="color:#cccccc;">) </span><span>in
+</span><span>let </span><span style="color:#cccccc;">osc_filtered </span><span>=
+</span><span style="color:#cccccc;">  osc </span><span>|&gt;</span><span style="color:#cccccc;"> butterworth_low_pass_filter </span><span style="color:#80d500;">~cutoff_hz:</span><span style="color:#cccccc;">(env </span><span>|&gt;</span><span style="color:#cccccc;"> scale </span><span style="color:#eddd5a;">20000.0</span><span style="color:#cccccc;">)
+</span><span>in
+</span><span>let </span><span style="color:#cccccc;">output </span><span>=</span><span style="color:#cccccc;"> osc_filtered </span><span>*.</span><span style="color:#cccccc;">. env </span><span>in
+</span><span style="color:#cccccc;">...
+</span></code></pre>
+<pre data-lang="rust" style="background-color:#191919;color:#ffffff;" class="language-rust "><code class="language-rust" data-lang="rust"><span>...
+</span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> env </span><span>= </span><span style="color:#8aa6c1;">adsr_linear_01</span><span style="color:#cccccc;">(</span><span>&amp;</span><span style="color:#cccccc;">gate).</span><span style="color:#8aa6c1;">attack_s</span><span style="color:#cccccc;">(</span><span style="color:#eddd5a;">0.01</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">release_s</span><span style="color:#cccccc;">(</span><span style="color:#eddd5a;">0.15</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">();
+</span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> osc_filtered </span><span>=
+</span><span style="color:#cccccc;">    osc.</span><span style="color:#8aa6c1;">filter</span><span style="color:#cccccc;">(</span><span style="color:#8aa6c1;">low_pass_butterworth</span><span style="color:#cccccc;">(env.</span><span style="color:#8aa6c1;">clone</span><span style="color:#cccccc;">() </span><span>* </span><span style="color:#eddd5a;">20_000.0</span><span style="color:#cccccc;">).</span><span style="color:#8aa6c1;">build</span><span style="color:#cccccc;">());
+</span><span style="color:#80d500;">let</span><span style="color:#cccccc;"> output </span><span>=</span><span style="color:#cccccc;"> osc_filtered </span><span>*</span><span style="color:#cccccc;"> env;
+</span><span>...
+</span></code></pre>
+<p>If the Rust example above were changed to do <code>env * 20_000.0</code> instead of cloning
+then the <code>env</code> variable would be consumed by that multiplication, and wouldn’t be
+available the next time it’s needed by the <code>osc_filtered * env</code> on the following
+line.</p>
+<p>This highlights a design consideration when building Llama as well as CAW, which
+is how to handle the situation where the output of one module is used as the
+input to multiple other modules. In the analog world, depending what type of
+cables you use you might be able to plug multiple cables into each other to
+easily split or join a signal.</p>
+<p><img src="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-1/stacked-banana-jacks.jpg" alt="An analog synthesizer module with a stack of multiple cable terminators plugged into the same jack socket." /></p>
+<p>Llama and CAW both evaluate modules “top-down”. When evaluating an operation
+like <code>osc_filtered * env</code> during each audio sample, first a sample will be
+produced from <code>osc_filtered</code>, then a sample will be produced from <code>env</code>, then
+those samples will be multiplied. Evaluating <code>osc_filtered</code> means computing the
+output of the low-pass filter, which in turn needs to compute the output of the
+oscillator and so on. Top-down evaluation can be thought of as the sample values
+being <em>pulled</em> out of modules which can then pull values out of other modules
+and so on. This is distinct from a bottom-up evaluation where values are
+<em>pushed</em> from the most simple modules in the signal graph through more complex
+values.</p>
+<p>The envelope generator <code>env</code> is evaluated twice in the example. We really want both evaluations
+to result in the same value each sample, and we don’t want to have to repeat the work of
+recomputing its value if it’s already been computed once during the current
+sample. For this reason, each signal internally includes a cache of the sample
+value computed for that signal during the current sample. In CAW when you
+<code>.clone()</code> a signal you get a shallow copy that shares its cache with any other
+copies.</p>
+<p>Computing the value yielded by a signal might modify the signal’s internal
+state. Since signals are shared when they are cloned, this means we need a
+shared mutable value. In Rust this requires wrapping signals in something like
+<code>Rc&lt;RefCell&lt;...&gt;&gt;</code> and calling <code>.borrow_mut()</code> before mutating.
+This is all handled internally by the <code>Signal&lt;T&gt;</code> type, so it doesn’t leak into
+synthesizer code. Still
+doing this felt a little ugly and removed the ability of the compiler to
+optimize in some cases but it seemed essential for ergonomics. Eventually I
+found a way to have my cake and eat it too, which will be covered in part 2.</p>
+<p>That’s all for part 1. It didn’t take long to reach feature parity with Llama
+since all the complex logic was already implemented. I went a bit further,
+adding browser support and a couple of other modules such as reverb, a bit
+crusher, and synthesized drums.</p>
+<p>CAW is easy to include in other Rust projects. Here
+are some of my projects that use CAW:</p>
+<ul>
+<li><a href="https://gridbugs.github.io/generative-music-experiment/">Generative Music
+Experiment</a>,
+plays random notes while maintaining a musical context so the music
+feels like it’s in a particular key and mode.</li>
+<li><a href="https://gridbugs.itch.io/electric-organ">Electric Organ</a> is a roguelike I
+made for a game jam where the music is procedurally generated along with game
+content.</li>
+</ul>
+<p>Read more in <a href="https://gridbugs.github.io/purpleearthhypothesis.com/caw-part-2/">CAW Part 2</a>.</p>
+
+</article>
+
+
+<div class="next-prev-nav-container">
+  <nav>
+    <ul>
+      
+      
+      
+      
+      <li class="nav-prev">
+	
+	<a href="https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;breadboard-synth&#x2F;" aria-label="Previous">
+	  Previous: Breadboard Synth
+	</a>
+	
+      </li>
+      <li class="nav-next">
+	
+	<a href="https:&#x2F;&#x2F;gridbugs.github.io&#x2F;purpleearthhypothesis.com&#x2F;briefcase-synth&#x2F;" aria-label="Next">
+	  Next: Briefcase Synth
+	</a>
+	
+      </li>
+    </ul>
+  </nav>
+</div>
+
+
+
+                <!-- end of "content" -->
+            </div>
+
+            <footer>
+  <div class="copyright">
+      © 2025-2026 <a href="https://www.purpleearthhypothesis.com">purpleearthhypothesis.com</a>
+  </div>
+</footer>
+
+
+            <!-- end of "mid" -->
+          </div>
+
+          <!-- end of "columns" -->
+        </div>
+
+        <a id="spin" class="ibis-size margin-decoration" href="#ibis-scroll-target">
+          <div id="glasses-left" class="glasses ibis-size"></div>
+          <div id="glasses-right" class="glasses ibis-size"></div>
+          <div id="ibis" class="ibis-size"></div>
+        </a>
+
+        <div id="normal-scroll-target"></div>
+        <div id="ibis-scroll-target"></div>
+
+        <div id="lowsky"></div>
+        <div id="horizon"></div>
+        <div id="mountains"></div>
+        <div id="mountains-base"></div>
+        <div id="mountains-base-brighter"></div>
+        <div id="ground">
+          <div id="grid-overlay1"></div>
+          <div id="grid-overlay2"></div>
+          <div id="grid"></div>
+        </div>
+
+        <div id="palm1" class="palm"></div>
+        <div id="palm2" class="palm"></div>
+
+        <div id="star-container"></div>
+
+        <!-- end of "page" -->
+    </div>
+    <script>
+      const NUM_STARS = 500;
+      const MAX_STAR_TOP_PX = 8000;
+      function make_star() {
+        const star = document.createElement("div");
+        star.style.left = `${parseInt(Math.random() * 94 + 2)}%`;
+        star.style.top = `${parseInt(Math.random() * MAX_STAR_TOP_PX)}px`;
+        star.style.fontSize = `${parseInt(Math.random() * 20 + 8)}px`;
+        return star;
+      }
+      const star_container = document.getElementById("star-container");
+      for (let i = 0; i < NUM_STARS; i++) {
+        star_container.appendChild(make_star());
+      }
+    </script>
+    <script type="text/javascript" src="https://gridbugs.github.io/purpleearthhypothesis.com/keyboard.js"></script>
+    <script>
+      run_keyboard("https://gridbugs.github.io/purpleearthhypothesis.com/assets/keyboard-color-map.png");
+    </script>
+  </body>
+</html>
